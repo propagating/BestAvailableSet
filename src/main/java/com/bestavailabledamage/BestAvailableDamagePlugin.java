@@ -24,12 +24,62 @@
  */
 package com.bestavailabledamage;
 
+import com.bestavailabledamage.build.Loadout;
+import com.bestavailabledamage.build.LoadoutBuilder;
+import com.bestavailabledamage.build.SpeedAdjustedRanker;
+import com.bestavailabledamage.data.AttackType;
+import com.bestavailabledamage.data.EquipmentCatalog;
+import com.bestavailabledamage.data.MonsterCatalog;
+import com.bestavailabledamage.data.MonsterEntry;
+import com.bestavailabledamage.data.SpellCatalog;
+import com.bestavailabledamage.export.SharePayload;
+import com.bestavailabledamage.export.ShortlinkClient;
+import com.bestavailabledamage.player.PlayerProfile;
+import com.bestavailabledamage.storage.AccountContext;
+import com.bestavailabledamage.storage.ContainerObserver;
+import com.bestavailabledamage.storage.DebouncedSaver;
+import com.bestavailabledamage.storage.Observation;
+import com.bestavailabledamage.storage.OwnedItems;
+import com.bestavailabledamage.storage.OwnedItemsStore;
+import com.bestavailabledamage.storage.StorageType;
+import com.bestavailabledamage.ui.BestAvailableDamagePanel;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 import javax.inject.Inject;
+import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.api.GameState;
+import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.client.RuneLite;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
+import okhttp3.OkHttpClient;
 
 @Slf4j
 @PluginDescriptor(
@@ -39,8 +89,40 @@ import net.runelite.client.plugins.PluginDescriptor;
 )
 public class BestAvailableDamagePlugin extends Plugin
 {
+	private static final String RESOURCE_PREFIX = "/com/bestavailabledamage/";
+	private static final long SAVE_DEBOUNCE_MILLIS = 2_000L;
+
+	@Inject
+	private Client client;
+	@Inject
+	private ClientThread clientThread;
+	@Inject
+	private ClientToolbar clientToolbar;
+	@Inject
+	private ItemManager itemManager;
+	@Inject
+	private Gson gson;
+	@Inject
+	private OkHttpClient okHttpClient;
 	@Inject
 	private BestAvailableDamageConfig config;
+
+	private ScheduledExecutorService executor;
+	private OwnedItemsStore store;
+	private DebouncedSaver saver;
+	private AccountContext accountContext;
+	private ContainerObserver observer;
+	private BestAvailableDamagePanel panel;
+	private NavigationButton navButton;
+	private ShortlinkClient shortlink;
+	private SharePayload payload;
+
+	// set on the executor once the bundled JSON is parsed; read on the client thread
+	private volatile LoadoutBuilder builder;
+	// the account currently logged in; written on the client thread, read on the EDT via allIds()
+	private volatile OwnedItems owned;
+	// captured on the client thread during build, used on the OkHttp thread during export
+	private volatile PlayerProfile lastProfile;
 
 	@Provides
 	BestAvailableDamageConfig provideConfig(ConfigManager configManager)
@@ -51,12 +133,257 @@ public class BestAvailableDamagePlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
-		log.debug("bestavailabledamage: started");
+		executor = Executors.newSingleThreadScheduledExecutor();
+		store = new OwnedItemsStore(gson,
+			RuneLite.RUNELITE_DIR.toPath().resolve(OwnedItemsStore.DIRECTORY_NAME));
+		saver = new DebouncedSaver(store, executor, SAVE_DEBOUNCE_MILLIS);
+		accountContext = new AccountContext(client);
+		observer = new ContainerObserver(accountContext, itemManager, this::onObservation);
+		shortlink = new ShortlinkClient(okHttpClient, gson, ShortlinkClient.DEFAULT_ENDPOINT);
+		payload = new SharePayload(gson);
+
+		panel = new BestAvailableDamagePanel(new PanelActions());
+		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "panel_icon.png");
+		navButton = NavigationButton.builder()
+			.tooltip("Best Available Damage")
+			.icon(icon)
+			.priority(8)
+			.panel(panel)
+			.build();
+		clientToolbar.addNavigation(navButton);
+
+		final BestAvailableDamagePanel p = panel;
+		executor.execute(() -> loadCatalogs(p));
+
+		if (client.getGameState() == GameState.LOGGED_IN)
+		{
+			clientThread.invoke(this::onLogin);
+		}
 	}
 
 	@Override
 	protected void shutDown()
 	{
-		log.debug("bestavailabledamage: stopped");
+		if (saver != null)
+		{
+			saver.shutdown();
+			saver = null;
+		}
+		if (executor != null)
+		{
+			executor.shutdownNow();
+			executor = null;
+		}
+		if (navButton != null)
+		{
+			clientToolbar.removeNavigation(navButton);
+			navButton = null;
+		}
+		if (panel != null)
+		{
+			panel.dispose();
+			panel = null;
+		}
+		builder = null;
+		owned = null;
+		lastProfile = null;
+		observer = null;
+		store = null;
+	}
+
+	private void loadCatalogs(BestAvailableDamagePanel target)
+	{
+		try
+		{
+			EquipmentCatalog equipment = EquipmentCatalog.load(gson, resource("equipment.json"));
+			MonsterCatalog monsters = MonsterCatalog.load(gson, resource("monsters.json"));
+			SpellCatalog spells = SpellCatalog.load(gson, resource("spells.json"));
+			builder = new LoadoutBuilder(equipment, spells, new SpeedAdjustedRanker());
+			SwingUtilities.invokeLater(() ->
+			{
+				if (panel == target)
+				{
+					target.setMonsterCatalog(monsters);
+				}
+			});
+		}
+		catch (Exception e)
+		{
+			log.error("bestavailabledamage: could not load bundled data", e);
+			SwingUtilities.invokeLater(() ->
+			{
+				if (panel == target)
+				{
+					target.setDataError("Data files missing or unreadable; reinstall the plugin");
+				}
+			});
+		}
+	}
+
+	private Reader resource(String name)
+	{
+		InputStream in = getClass().getResourceAsStream(RESOURCE_PREFIX + name);
+		if (in == null)
+		{
+			throw new IllegalStateException("missing resource " + name);
+		}
+		return new InputStreamReader(in, StandardCharsets.UTF_8);
+	}
+
+	@Subscribe
+	public void onItemContainerChanged(ItemContainerChanged event)
+	{
+		if (observer != null)
+		{
+			observer.onItemContainerChanged(event);
+		}
+	}
+
+	/** Client thread. */
+	private void onObservation(Observation observation)
+	{
+		OwnedItems current = owned;
+		if (current == null || current.getAccountHash() != observation.getAccountHash())
+		{
+			current = new OwnedItems(observation.getAccountHash());
+			owned = current;
+		}
+		current.record(observation);
+		saver.markDirty(current);
+		pushStorageStatus(current);
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		if (event.getGameState() == GameState.LOGGED_IN)
+		{
+			onLogin();
+		}
+		else if (event.getGameState() == GameState.LOGIN_SCREEN)
+		{
+			if (saver != null)
+			{
+				executor.execute(saver::shutdown);
+			}
+			owned = null;
+			lastProfile = null;
+			pushStorageStatus(null);
+		}
+	}
+
+	/** Client thread. Starts an in-memory record for this account and merges the disk copy in. */
+	private void onLogin()
+	{
+		if (!accountContext.isObservable())
+		{
+			return;
+		}
+		final long hash = accountContext.accountHash();
+		OwnedItems current = owned;
+		if (current == null || current.getAccountHash() != hash)
+		{
+			current = new OwnedItems(hash);
+			owned = current;
+		}
+		final OwnedItems live = current;
+		final OwnedItemsStore s = store;
+		executor.execute(() ->
+		{
+			OwnedItems loaded = s.load(hash);
+			clientThread.invoke(() ->
+			{
+				if (owned == live)
+				{
+					live.mergeMissingFrom(loaded);
+					pushStorageStatus(live);
+				}
+			});
+		});
+	}
+
+	private void pushStorageStatus(OwnedItems current)
+	{
+		Map<StorageType, Optional<Instant>> seen = new EnumMap<>(StorageType.class);
+		for (StorageType type : StorageType.values())
+		{
+			seen.put(type, current == null ? Optional.empty() : current.lastSeen(type));
+		}
+		SwingUtilities.invokeLater(() ->
+		{
+			if (panel != null)
+			{
+				panel.setStorageStatus(seen);
+			}
+		});
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (!BestAvailableDamageConfig.GROUP.equals(event.getGroup()))
+		{
+			return;
+		}
+		SwingUtilities.invokeLater(() ->
+		{
+			if (panel != null)
+			{
+				panel.refreshExportState();
+			}
+		});
+	}
+
+	private class PanelActions implements BestAvailableDamagePanel.Actions
+	{
+		@Override
+		public void build(AttackType type, MonsterEntry target, Consumer<List<Loadout>> onBuilt, Consumer<String> onStatus)
+		{
+			final LoadoutBuilder b = builder;
+			if (b == null)
+			{
+				onStatus.accept("Data still loading");
+				return;
+			}
+			clientThread.invoke(() ->
+			{
+				if (client.getGameState() != GameState.LOGGED_IN)
+				{
+					SwingUtilities.invokeLater(() -> onStatus.accept("Log in first"));
+					return;
+				}
+				PlayerProfile profile = PlayerProfile.capture(client);
+				lastProfile = profile;
+				OwnedItems current = owned;
+				Set<Integer> ids = current == null ? Collections.emptySet() : current.allIds();
+				List<Loadout> built = b.build(ids, type, target, profile.getMagic());
+				SwingUtilities.invokeLater(() -> onBuilt.accept(built));
+			});
+		}
+
+		@Override
+		public void export(List<Loadout> loadouts, AttackType type, MonsterEntry target, Consumer<String> onStatus)
+		{
+			PlayerProfile profile = lastProfile;
+			if (!config.exportToWikiCalc() || profile == null)
+			{
+				onStatus.accept(BestAvailableDamagePanel.EXPORT_DISABLED_TOOLTIP);
+				return;
+			}
+			String json = payload.toJson(loadouts, target, profile, type);
+			shortlink.create(json,
+				id ->
+				{
+					LinkBrowser.browse(ShortlinkClient.CALC_URL_PREFIX + id);
+					SwingUtilities.invokeLater(() -> onStatus.accept("Opened in your browser"));
+				},
+				message -> SwingUtilities.invokeLater(() -> onStatus.accept(message)));
+		}
+
+		@Override
+		public boolean exportEnabled()
+		{
+			return config.exportToWikiCalc();
+		}
 	}
 }

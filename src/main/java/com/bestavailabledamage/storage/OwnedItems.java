@@ -88,4 +88,14 @@ public class OwnedItems
 		}
 		return copy;
 	}
+
+	/** Fills in containers this account has not seen this session from a loaded snapshot. */
+	public synchronized void mergeMissingFrom(OwnedItems other)
+	{
+		OwnedItems copy = other.copy();
+		for (Map.Entry<StorageType, Snapshot> e : copy.snapshots.entrySet())
+		{
+			snapshots.putIfAbsent(e.getKey(), e.getValue());
+		}
+	}
 }

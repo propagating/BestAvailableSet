@@ -69,4 +69,17 @@ public class OwnedItemsTest
 			StorageType.forContainer(net.runelite.api.gameval.InventoryID.INV_GROUP_TEMP).get());
 		assertTrue(StorageType.forContainer(net.runelite.api.gameval.InventoryID.SEED_VAULT).isEmpty());
 	}
+
+	@Test
+	public void mergeMissingFromKeepsLiveSnapshotsAndFillsGaps()
+	{
+		OwnedItems live = new OwnedItems(42L);
+		live.record(new Observation(42L, StorageType.INVENTORY, Set.of(9), Instant.EPOCH));
+		OwnedItems loaded = new OwnedItems(42L);
+		loaded.record(new Observation(42L, StorageType.INVENTORY, Set.of(1), Instant.EPOCH));
+		loaded.record(new Observation(42L, StorageType.BANK, Set.of(2, 3), Instant.EPOCH));
+
+		live.mergeMissingFrom(loaded);
+		assertEquals(Set.of(9, 2, 3), live.allIds());
+	}
 }
