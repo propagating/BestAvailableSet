@@ -32,6 +32,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.After;
 import org.junit.Before;
@@ -96,6 +97,15 @@ public class ShortlinkClientTest
 		server.enqueue(new MockResponse().setBody("not json"));
 		Outcome o = call("{}");
 		assertEquals("Could not create share link (unexpected response)", o.error.get());
+	}
+
+	@Test
+	public void nonStringDataReportsError() throws Exception
+	{
+		server.enqueue(new MockResponse().setBody("{\"data\":12345}"));
+		Outcome o = call("{}");
+		assertEquals("Could not create share link (unexpected response)", o.error.get());
+		assertFalse(o.id.isDone());
 	}
 
 	@Test

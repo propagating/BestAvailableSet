@@ -92,7 +92,8 @@ public class ShortlinkClient
 					}
 					JsonObject object = parsed.getAsJsonObject();
 					JsonElement data = object.get("data");
-					if (data == null || !data.isJsonPrimitive() || data.getAsString().isEmpty())
+					if (data == null || !data.isJsonPrimitive() || !data.getAsJsonPrimitive().isString()
+						|| data.getAsString().isEmpty())
 					{
 						onError.accept("Could not create share link (unexpected response)");
 						return;
