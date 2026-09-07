@@ -83,10 +83,21 @@ public class BestAvailableDamagePanel extends PluginPanel
 	private final JPanel cards = new JPanel();
 	private final JButton exportButton = new JButton("Open in wiki DPS calc");
 	private final JLabel status = new JLabel(" ");
+	private final JLabel pickerMessage = new JLabel(" ");
+	private final JPanel attackTypeRow;
+	private final JPanel searchRow;
+	private final JScrollPane resultsScroll;
 
 	private MonsterCatalog monsters;
 	private MonsterEntry selected;
 	private List<Loadout> loadouts = Collections.emptyList();
+
+	// EDT-only re-entrancy guards: the panel's methods and every Actions callback run on
+	// the Swing EDT, never concurrently with each other, so plain booleans are sufficient
+	// here - no synchronisation is needed. They exist purely to stop a user from firing a
+	// second build()/export() while the first one's callback hasn't landed yet.
+	private boolean building;
+	private boolean exporting;
 
 	public BestAvailableDamagePanel(Actions actions)
 	{
@@ -99,6 +110,11 @@ public class BestAvailableDamagePanel extends PluginPanel
 		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		controls.setBorder(new EmptyBorder(6, 0, 6, 0));
 
+		pickerMessage.setFont(FontManager.getRunescapeSmallFont());
+		pickerMessage.setForeground(ColorScheme.PROGRESS_ERROR_COLOR);
+		pickerMessage.setVisible(false);
+		controls.add(pickerMessage);
+
 		attackType.setRenderer(new DefaultListCellRenderer()
 		{
 			@Override
@@ -110,7 +126,8 @@ public class BestAvailableDamagePanel extends PluginPanel
 				return this;
 			}
 		});
-		controls.add(labelled("Attack type", attackType));
+		attackTypeRow = labelled("Attack type", attackType);
+		controls.add(attackTypeRow);
 
 		search.setToolTipText("Type part of a monster name");
 		search.getDocument().addDocumentListener(new DocumentListener()
@@ -133,7 +150,8 @@ public class BestAvailableDamagePanel extends PluginPanel
 				refreshResults();
 			}
 		});
-		controls.add(labelled("Target", search));
+		searchRow = labelled("Target", search);
+		controls.add(searchRow);
 
 		results.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		results.setVisibleRowCount(6);
@@ -156,10 +174,10 @@ public class BestAvailableDamagePanel extends PluginPanel
 			{
 				selected = results.getSelectedValue();
 				target.setText("Target: " + selected.displayName());
-				buildButton.setEnabled(true);
+				updateBuildEnabled();
 			}
 		});
-		JScrollPane resultsScroll = new JScrollPane(results);
+		resultsScroll = new JScrollPane(results);
 		resultsScroll.setPreferredSize(new Dimension(PluginPanel.PANEL_WIDTH - 20, 110));
 		controls.add(resultsScroll);
 
@@ -217,13 +235,34 @@ public class BestAvailableDamagePanel extends PluginPanel
 	public void setMonsterCatalog(MonsterCatalog catalog)
 	{
 		this.monsters = catalog;
+		pickerMessage.setVisible(false);
+		setPickerVisible(true);
 		setSearchEnabled(true, "");
 		refreshResults();
+		revalidate();
+		repaint();
 	}
 
 	public void setDataError(String message)
 	{
-		setSearchEnabled(false, message);
+		setPickerVisible(false);
+		pickerMessage.setText(message);
+		pickerMessage.setVisible(true);
+		status.setText(message);
+		updateBuildEnabled();
+		revalidate();
+		repaint();
+	}
+
+	/** Shows or hides the target picker (everything needed to pick a monster and build). */
+	private void setPickerVisible(boolean visible)
+	{
+		attackTypeRow.setVisible(visible);
+		searchRow.setVisible(visible);
+		resultsScroll.setVisible(visible);
+		target.setVisible(visible);
+		buildButton.setVisible(visible);
+		exportButton.setVisible(visible);
 	}
 
 	private void setSearchEnabled(boolean enabled, String message)
@@ -231,7 +270,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 		search.setEnabled(enabled);
 		attackType.setEnabled(enabled);
 		results.setEnabled(enabled);
-		buildButton.setEnabled(enabled && selected != null);
+		updateBuildEnabled();
 		if (!message.isEmpty())
 		{
 			status.setText(message);
@@ -245,9 +284,9 @@ public class BestAvailableDamagePanel extends PluginPanel
 
 	public void refreshExportState()
 	{
-		boolean enabled = actions.exportEnabled();
-		exportButton.setEnabled(enabled && !loadouts.isEmpty());
-		exportButton.setToolTipText(enabled ? "Create a share link and open it in your browser" : EXPORT_DISABLED_TOOLTIP);
+		boolean configEnabled = actions.exportEnabled();
+		exportButton.setEnabled(configEnabled && !exporting && !loadouts.isEmpty());
+		exportButton.setToolTipText(configEnabled ? "Create a share link and open it in your browser" : EXPORT_DISABLED_TOOLTIP);
 	}
 
 	private void refreshResults()
@@ -263,17 +302,29 @@ public class BestAvailableDamagePanel extends PluginPanel
 		}
 	}
 
+	/**
+	 * Recomputes whether the Build button should be enabled. Every path that might make
+	 * Build eligible (a new selection, the catalog finishing load, search state changes)
+	 * routes through here so none of them can re-enable it while a build is in flight.
+	 */
+	private void updateBuildEnabled()
+	{
+		buildButton.setEnabled(selected != null && monsters != null && !building);
+	}
+
 	private void build()
 	{
-		if (selected == null)
+		if (selected == null || building)
 		{
 			return;
 		}
+		building = true;
+		updateBuildEnabled();
 		AttackType type = (AttackType) attackType.getSelectedItem();
-		buildButton.setEnabled(false);
 		status.setText("Building...");
 		actions.build(type, selected, built ->
 		{
+			building = false;
 			loadouts = built;
 			cards.removeAll();
 			if (built.isEmpty())
@@ -291,25 +342,28 @@ public class BestAvailableDamagePanel extends PluginPanel
 			cards.revalidate();
 			cards.repaint();
 			status.setText(built.isEmpty() ? " " : built.size() + " loadout(s) for " + selected.displayName());
-			buildButton.setEnabled(true);
+			updateBuildEnabled();
 			refreshExportState();
 		}, message ->
 		{
+			building = false;
 			status.setText(message);
-			buildButton.setEnabled(true);
+			updateBuildEnabled();
 		});
 	}
 
 	private void export()
 	{
-		if (loadouts.isEmpty() || selected == null)
+		if (loadouts.isEmpty() || selected == null || exporting)
 		{
 			return;
 		}
-		exportButton.setEnabled(false);
+		exporting = true;
+		refreshExportState();
 		status.setText("Creating share link...");
 		actions.export(new ArrayList<>(loadouts), (AttackType) attackType.getSelectedItem(), selected, message ->
 		{
+			exporting = false;
 			status.setText(message);
 			refreshExportState();
 		});
