@@ -1,0 +1,73 @@
+{
+  "serializationVersion": 10,
+  "selectedLoadout": 0,
+  "loadouts": [
+    {
+      "name": "Ghrazi rapier",
+      "style": {"name": "Lunge", "type": "stab", "stance": "Aggressive"},
+      "skills": {"atk": 99, "str": 99, "def": 90, "ranged": 95, "magic": 94, "prayer": 77, "hp": 99, "mining": 85, "herblore": 80},
+      "prayers": [13],
+      "equipment": {
+        "head": {"id": 26382},
+        "cape": {"id": 21295},
+        "neck": {"id": 19553},
+        "ammo": null,
+        "weapon": {"id": 22324},
+        "body": {"id": 11832},
+        "shield": {"id": 22322},
+        "legs": {"id": 11834},
+        "hands": {"id": 22981},
+        "feet": {"id": 13239},
+        "ring": {"id": 28307}
+      },
+      "spell": null
+    },
+    {
+      "name": "Toxic blowpipe",
+      "style": {"name": "Rapid", "type": "ranged", "stance": "Rapid"},
+      "skills": {"atk": 99, "str": 99, "def": 90, "ranged": 95, "magic": 94, "prayer": 77, "hp": 99, "mining": 85, "herblore": 80},
+      "prayers": [13],
+      "equipment": {
+        "head": null,
+        "cape": null,
+        "neck": null,
+        "ammo": null,
+        "weapon": {"id": 12926, "itemVars": {"blowpipeDartId": 11230, "blowpipeDartName": "Dragon dart"}},
+        "body": null,
+        "shield": null,
+        "legs": null,
+        "hands": null,
+        "feet": null,
+        "ring": null
+      },
+      "spell": {"name": "Fire Surge"}
+    }
+  ],
+  "monster": {
+    "id": 8058,
+    "name": "Vorkath",
+    "version": "Dragon Slayer II",
+    "inputs": {
+      "isFromCoxCm": false,
+      "toaInvocationLevel": 0,
+      "toaPathLevel": 0,
+      "partyMaxCombatLevel": 126,
+      "partySumMiningLevel": 99,
+      "partyMaxHpLevel": 99,
+      "partySize": 1,
+      "monsterCurrentHp": 150,
+      "defenceReductions": {
+        "vulnerability": false,
+        "accursed": false,
+        "elderMaul": 0,
+        "dwh": 0,
+        "arclight": 0,
+        "emberlight": 0,
+        "bgs": 0,
+        "tonalztic": 0,
+        "seercull": 0,
+        "ayak": 0
+      }
+    }
+  }
+}
