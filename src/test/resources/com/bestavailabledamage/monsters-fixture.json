@@ -1,0 +1,6 @@
+[
+{"id":8058,"name":"Vorkath","version":"Dragon Slayer II","level":392,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true},
+{"id":8059,"name":"Vorkath","version":"Post-quest","level":732,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true},
+{"id":415,"name":"Abyssal demon","version":"Standard","level":124,"weaknessElement":null,"weaknessSeverity":0,"attributes":["demon"],"slayerMonster":true},
+{"id":2215,"name":"General Graardor","version":"","level":624,"weaknessElement":"earth","weaknessSeverity":40,"attributes":[],"slayerMonster":true}
+]

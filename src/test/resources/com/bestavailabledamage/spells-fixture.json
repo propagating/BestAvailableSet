@@ -1,0 +1,9 @@
+[
+{"name":"Fire Strike","maxHit":8,"element":"fire","level":13},
+{"name":"Fire Bolt","maxHit":12,"element":"fire","level":35},
+{"name":"Fire Blast","maxHit":16,"element":"fire","level":59},
+{"name":"Fire Wave","maxHit":20,"element":"fire","level":75},
+{"name":"Fire Surge","maxHit":24,"element":"fire","level":95},
+{"name":"Earth Wave","maxHit":19,"element":"earth","level":70},
+{"name":"Wind Surge","maxHit":21,"element":"air","level":81}
+]
