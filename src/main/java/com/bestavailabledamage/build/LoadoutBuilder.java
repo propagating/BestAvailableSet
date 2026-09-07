@@ -1,0 +1,149 @@
+/*
+ * Copyright (c) 2026, propagating <propagating@protonmail.com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package com.bestavailabledamage.build;
+
+import com.bestavailabledamage.data.AttackType;
+import com.bestavailabledamage.data.CombatStyle;
+import com.bestavailabledamage.data.EquipmentCatalog;
+import com.bestavailabledamage.data.EquipmentEntry;
+import com.bestavailabledamage.data.MonsterEntry;
+import com.bestavailabledamage.data.SpellCatalog;
+import com.bestavailabledamage.data.SpellEntry;
+import com.bestavailabledamage.data.WeaponStyles;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+/** Turns "what I own" plus an attack type and a target into up to six loadouts. Pure. */
+public class LoadoutBuilder
+{
+	public static final int MAX_LOADOUTS = 6;
+	public static final List<String> SLOTS = List.of(
+		"head", "cape", "neck", "ammo", "weapon", "body", "shield", "legs", "hands", "feet", "ring");
+
+	private final EquipmentCatalog catalog;
+	private final SpellCatalog spells;
+	private final WeaponRanker ranker;
+
+	public LoadoutBuilder(EquipmentCatalog catalog, SpellCatalog spells, WeaponRanker ranker)
+	{
+		this.catalog = catalog;
+		this.spells = spells;
+		this.ranker = ranker;
+	}
+
+	public List<Loadout> build(Set<Integer> ownedIds, AttackType type, MonsterEntry target, int magicLevel)
+	{
+		List<EquipmentEntry> owned = new ArrayList<>();
+		for (Integer id : ownedIds)
+		{
+			catalog.byId(id).ifPresent(owned::add);
+		}
+		SlotFiller filler = new SlotFiller(owned);
+		List<EquipmentEntry> weapons = rankedWeapons(owned, type);
+
+		Optional<String> element = type == AttackType.MAGIC ? target.elementWeakness() : Optional.empty();
+		Optional<SpellEntry> spell = element.flatMap(el -> spells.strongest(el, magicLevel));
+
+		List<Loadout> out = new ArrayList<>();
+		if (!spell.isPresent())
+		{
+			for (EquipmentEntry weapon : weapons)
+			{
+				if (out.size() >= MAX_LOADOUTS)
+				{
+					break;
+				}
+				out.add(loadout(weapon, type, filler, null, null));
+			}
+			return out;
+		}
+
+		// elemental group on castable staves, then powered staves, three and three (spill over)
+		List<EquipmentEntry> casters = new ArrayList<>();
+		List<EquipmentEntry> powered = new ArrayList<>();
+		for (EquipmentEntry w : weapons)
+		{
+			(isPoweredStaff(w) ? powered : casters).add(w);
+		}
+		int half = MAX_LOADOUTS / 2;
+		int casterCount = Math.min(casters.size(), Math.max(half, MAX_LOADOUTS - powered.size()));
+		int poweredCount = Math.min(powered.size(), MAX_LOADOUTS - casterCount);
+		for (int i = 0; i < casterCount; i++)
+		{
+			out.add(loadout(casters.get(i), type, filler, element.get(), spell.get()));
+		}
+		for (int i = 0; i < poweredCount; i++)
+		{
+			out.add(loadout(powered.get(i), type, filler, null, null));
+		}
+		return out;
+	}
+
+	private static boolean isPoweredStaff(EquipmentEntry weapon)
+	{
+		String c = weapon.getCategory();
+		return c.equalsIgnoreCase("Powered Staff") || c.equalsIgnoreCase("Powered Wand");
+	}
+
+	/** Owned weapons that can attack with the type, best first, one per base item, no darts. */
+	private List<EquipmentEntry> rankedWeapons(List<EquipmentEntry> owned, AttackType type)
+	{
+		Map<Integer, EquipmentEntry> byBase = new HashMap<>();
+		Comparator<EquipmentEntry> order = Comparator
+			.comparingDouble((EquipmentEntry w) -> ranker.score(w, type))
+			.thenComparing(SlotFiller.preference(type));
+		for (EquipmentEntry w : owned)
+		{
+			if (!w.getSlot().equals("weapon") || SlotFiller.isDart(w)
+				|| !WeaponStyles.bestStyleFor(w.getCategory(), type).isPresent())
+			{
+				continue;
+			}
+			EquipmentEntry current = byBase.get(w.getBaseId());
+			if (current == null || order.compare(w, current) > 0)
+			{
+				byBase.put(w.getBaseId(), w);
+			}
+		}
+		List<EquipmentEntry> ranked = new ArrayList<>(byBase.values());
+		ranked.sort(order.reversed());
+		return ranked;
+	}
+
+	private Loadout loadout(EquipmentEntry weapon, AttackType type, SlotFiller filler,
+		String element, SpellEntry spell)
+	{
+		CombatStyle style = WeaponStyles.bestStyleFor(weapon.getCategory(), type).get();
+		Map<String, EquipmentEntry> gear = filler.fill(weapon, type, element);
+		EquipmentEntry dart = weapon.getName().startsWith(SlotFiller.BLOWPIPE) ? filler.bestDart() : null;
+		String name = spell == null ? weapon.getName() : weapon.getName() + " + " + spell.getName();
+		return new Loadout(name, style, gear, dart, spell);
+	}
+}
