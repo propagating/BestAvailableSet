@@ -17,10 +17,11 @@ real damage numbers are computed.
   own loadout, filling the other slots with your best item by strength then
   accuracy. Two-handed weapons empty the shield slot; bows get your best
   arrows, crossbows your best bolts, a blowpipe your best darts.
-- For magic against a target with an element weakness, up to three loadouts
-  use your non-powered staves with the strongest standard-spellbook spell of
-  that element you can cast (and a matching tome if you own one), and up to
-  three use powered staves.
+- For magic against a target with an element weakness, at least three
+  loadouts use your non-powered staves with the strongest standard-spellbook
+  spell of that element you can cast (and a matching tome if you own one),
+  and the remaining slots (up to six in total) use powered staves; if you own
+  fewer than three of one kind, the other kind fills the gap.
 - **Open in wiki DPS calc** sends the loadouts, your base levels, the best
   offensive prayer you can use and the target to the calculator's share-link
   service and opens the link. This is off by default; enable *Export to wiki

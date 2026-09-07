@@ -90,7 +90,17 @@ public class LoadoutBuilder
 		List<EquipmentEntry> powered = new ArrayList<>();
 		for (EquipmentEntry w : weapons)
 		{
-			(isPoweredStaff(w) ? powered : casters).add(w);
+			if (isPoweredStaff(w))
+			{
+				powered.add(w);
+			}
+			else if (isElementalCaster(w))
+			{
+				casters.add(w);
+			}
+			// other non-powered magic-capable weapons (e.g. Salamanders) offer a magic style
+			// but cannot autocast a spell, so they are excluded from the elemental split here;
+			// they still appear in the single-group path above when there is no weakness.
 		}
 		int half = MAX_LOADOUTS / 2;
 		int casterCount = Math.min(casters.size(), Math.max(half, MAX_LOADOUTS - powered.size()));
@@ -110,6 +120,13 @@ public class LoadoutBuilder
 	{
 		String c = weapon.getCategory();
 		return c.equalsIgnoreCase("Powered Staff") || c.equalsIgnoreCase("Powered Wand");
+	}
+
+	/** Pool A of the elemental split: weapons that can attach a standard-spellbook spell. */
+	private static boolean isElementalCaster(EquipmentEntry weapon)
+	{
+		String c = weapon.getCategory();
+		return c.equalsIgnoreCase("Staff") || c.equalsIgnoreCase("Bladed Staff");
 	}
 
 	/** Owned weapons that can attack with the type, best first, one per base item, no darts. */

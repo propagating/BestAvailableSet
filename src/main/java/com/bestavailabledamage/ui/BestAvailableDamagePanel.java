@@ -91,6 +91,10 @@ public class BestAvailableDamagePanel extends PluginPanel
 	private MonsterCatalog monsters;
 	private MonsterEntry selected;
 	private List<Loadout> loadouts = Collections.emptyList();
+	// the attack type and target the current `loadouts` were built for; null when there is
+	// nothing built (or it has been invalidated by a combo/selection change since the build)
+	private AttackType builtType;
+	private MonsterEntry builtTarget;
 
 	// EDT-only re-entrancy guards: the panel's methods and every Actions callback run on
 	// the Swing EDT, never concurrently with each other, so plain booleans are sufficient
@@ -126,6 +130,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 				return this;
 			}
 		});
+		attackType.addActionListener(e -> clearBuiltState());
 		attackTypeRow = labelled("Attack type", attackType);
 		controls.add(attackTypeRow);
 
@@ -172,7 +177,12 @@ public class BestAvailableDamagePanel extends PluginPanel
 		{
 			if (!e.getValueIsAdjusting() && results.getSelectedValue() != null)
 			{
-				selected = results.getSelectedValue();
+				MonsterEntry newSelection = results.getSelectedValue();
+				if (selected != newSelection)
+				{
+					clearBuiltState();
+				}
+				selected = newSelection;
 				target.setText("Target: " + selected.displayName());
 				updateBuildEnabled();
 			}
@@ -238,6 +248,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 		pickerMessage.setVisible(false);
 		setPickerVisible(true);
 		setSearchEnabled(true, "");
+		status.setText(" ");
 		refreshResults();
 		revalidate();
 		repaint();
@@ -312,6 +323,27 @@ public class BestAvailableDamagePanel extends PluginPanel
 		buildButton.setEnabled(selected != null && monsters != null && !building);
 	}
 
+	/**
+	 * Invalidates whatever was built: clears the cards and the export target, and disables
+	 * Open until the user builds again. Called whenever the attack type or the selected
+	 * target changes after a build, since either invalidates `loadouts`.
+	 */
+	private void clearBuiltState()
+	{
+		if (loadouts.isEmpty() && builtType == null && builtTarget == null)
+		{
+			return;
+		}
+		loadouts = Collections.emptyList();
+		builtType = null;
+		builtTarget = null;
+		cards.removeAll();
+		cards.revalidate();
+		cards.repaint();
+		refreshExportState();
+		status.setText("Press Build loadouts to refresh");
+	}
+
 	private void build()
 	{
 		if (selected == null || building)
@@ -320,12 +352,15 @@ public class BestAvailableDamagePanel extends PluginPanel
 		}
 		building = true;
 		updateBuildEnabled();
-		AttackType type = (AttackType) attackType.getSelectedItem();
+		final AttackType type = (AttackType) attackType.getSelectedItem();
+		final MonsterEntry buildTarget = selected;
 		status.setText("Building...");
-		actions.build(type, selected, built ->
+		actions.build(type, buildTarget, built ->
 		{
 			building = false;
 			loadouts = built;
+			builtType = type;
+			builtTarget = buildTarget;
 			cards.removeAll();
 			if (built.isEmpty())
 			{
@@ -341,7 +376,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 			}
 			cards.revalidate();
 			cards.repaint();
-			status.setText(built.isEmpty() ? " " : built.size() + " loadout(s) for " + selected.displayName());
+			status.setText(built.isEmpty() ? " " : built.size() + " loadout(s) for " + buildTarget.displayName());
 			updateBuildEnabled();
 			refreshExportState();
 		}, message ->
@@ -354,14 +389,16 @@ public class BestAvailableDamagePanel extends PluginPanel
 
 	private void export()
 	{
-		if (loadouts.isEmpty() || selected == null || exporting)
+		if (loadouts.isEmpty() || builtType == null || builtTarget == null || exporting)
 		{
 			return;
 		}
 		exporting = true;
 		refreshExportState();
 		status.setText("Creating share link...");
-		actions.export(new ArrayList<>(loadouts), (AttackType) attackType.getSelectedItem(), selected, message ->
+		final AttackType exportType = builtType;
+		final MonsterEntry exportTarget = builtTarget;
+		actions.export(new ArrayList<>(loadouts), exportType, exportTarget, message ->
 		{
 			exporting = false;
 			status.setText(message);
@@ -374,5 +411,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 		cards.removeAll();
 		resultsModel.clear();
 		loadouts = Collections.emptyList();
+		builtType = null;
+		builtTarget = null;
 	}
 }

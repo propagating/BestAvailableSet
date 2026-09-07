@@ -70,7 +70,10 @@ public class DebouncedSaver
 		}
 	}
 
-	/** Cancels any pending write and flushes what is outstanding on the calling thread. */
+	/**
+	 * Cancels any pending write and flushes what is outstanding on the calling thread. Does
+	 * not touch the executor - the caller owns it and is responsible for shutting it down.
+	 */
 	public synchronized void shutdown()
 	{
 		if (pending != null)

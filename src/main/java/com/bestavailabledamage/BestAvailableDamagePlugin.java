@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -123,6 +124,10 @@ public class BestAvailableDamagePlugin extends Plugin
 	private volatile OwnedItems owned;
 	// captured on the client thread during build, used on the OkHttp thread during export
 	private volatile PlayerProfile lastProfile;
+	// account hash the store has already been loaded for this session; client thread only.
+	// LOGGED_IN fires after every LOADING (teleports, region crossings), not just real logins,
+	// so this avoids queuing a redundant disk load on each one.
+	private Long loadedForAccount;
 
 	@Provides
 	BestAvailableDamageConfig provideConfig(ConfigManager configManager)
@@ -164,16 +169,28 @@ public class BestAvailableDamagePlugin extends Plugin
 	@Override
 	protected void shutDown()
 	{
-		if (saver != null)
+		if (saver != null && executor != null)
 		{
-			saver.shutdown();
-			saver = null;
+			final DebouncedSaver s = saver;
+			try
+			{
+				// queue the flush on the executor rather than running it here: shutDown()
+				// executes on the client thread, and writeDirty() does synchronous disk IO
+				executor.execute(s::shutdown);
+			}
+			catch (RejectedExecutionException e)
+			{
+				log.warn("Could not queue final save on shutdown", e);
+			}
 		}
+		saver = null;
 		if (executor != null)
 		{
-			executor.shutdownNow();
+			// not shutdownNow(): the queued flush above must still run
+			executor.shutdown();
 			executor = null;
 		}
+		loadedForAccount = null;
 		if (navButton != null)
 		{
 			clientToolbar.removeNavigation(navButton);
@@ -268,6 +285,7 @@ public class BestAvailableDamagePlugin extends Plugin
 			}
 			owned = null;
 			lastProfile = null;
+			loadedForAccount = null;
 			pushStorageStatus(null);
 		}
 	}
@@ -286,6 +304,13 @@ public class BestAvailableDamagePlugin extends Plugin
 			current = new OwnedItems(hash);
 			owned = current;
 		}
+		if (loadedForAccount != null && loadedForAccount == hash)
+		{
+			// already loaded this account's store this session; LOGGED_IN also fires after
+			// teleports and region crossings, not just real logins
+			return;
+		}
+		loadedForAccount = hash;
 		final OwnedItems live = current;
 		final OwnedItemsStore s = store;
 		executor.execute(() ->
@@ -373,9 +398,14 @@ public class BestAvailableDamagePlugin extends Plugin
 		public void export(List<Loadout> loadouts, AttackType type, MonsterEntry target, Consumer<String> onStatus)
 		{
 			PlayerProfile profile = lastProfile;
-			if (!config.exportToWikiCalc() || profile == null)
+			if (!config.exportToWikiCalc())
 			{
 				onStatus.accept(BestAvailableDamagePanel.EXPORT_DISABLED_TOOLTIP);
+				return;
+			}
+			if (profile == null)
+			{
+				onStatus.accept("Build loadouts again before exporting");
 				return;
 			}
 			try

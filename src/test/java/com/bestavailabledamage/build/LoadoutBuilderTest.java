@@ -27,11 +27,13 @@ package com.bestavailabledamage.build;
 import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentCatalog;
 import com.bestavailabledamage.data.EquipmentCatalogTest;
+import com.bestavailabledamage.data.EquipmentEntry;
 import com.bestavailabledamage.data.MonsterCatalog;
 import com.bestavailabledamage.data.MonsterCatalogTest;
 import com.bestavailabledamage.data.MonsterEntry;
 import com.bestavailabledamage.data.SpellCatalog;
 import com.bestavailabledamage.data.SpellCatalogTest;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -188,5 +190,26 @@ public class LoadoutBuilderTest
 		List<Loadout> loadouts = builder.build(owned, AttackType.SLASH, abyssalDemon, 99);
 		assertEquals(1, loadouts.size());
 		assertNull(loadouts.get(0).getEquipment().get("head"));
+	}
+
+	@Test
+	public void salamanderIsExcludedFromElementalCasterPool()
+	{
+		// a Salamander offers a Magic style (Blaze) but cannot autocast a spell; it must not
+		// be treated as an elemental caster even though it ranks above the real staves here.
+		EquipmentEntry salamander = new EquipmentEntry(90210, 90210, "Test Salamander", null,
+			"weapon", "Salamander", true, 1, 0, 0, 200, 0, 0, 0, 90, 0);
+		List<EquipmentEntry> withSalamander = new ArrayList<>(catalog.all());
+		withSalamander.add(salamander);
+		EquipmentCatalog augmented = new EquipmentCatalog(withSalamander);
+		LoadoutBuilder builderWithSalamander = new LoadoutBuilder(augmented, spells, new SpeedAdjustedRanker());
+
+		Set<Integer> owned = everything(augmented);
+		List<Loadout> loadouts = builderWithSalamander.build(owned, AttackType.MAGIC, vorkath, 99);
+		assertTrue(weaponNames(loadouts).stream().noneMatch(n -> n.equals("Test Salamander")));
+
+		// it is still eligible in the single-group path when the target has no weakness
+		List<Loadout> noWeakness = builderWithSalamander.build(owned, AttackType.MAGIC, abyssalDemon, 99);
+		assertTrue(weaponNames(noWeakness).stream().anyMatch(n -> n.equals("Test Salamander")));
 	}
 }
