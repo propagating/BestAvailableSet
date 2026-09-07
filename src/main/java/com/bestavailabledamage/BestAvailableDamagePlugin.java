@@ -347,17 +347,25 @@ public class BestAvailableDamagePlugin extends Plugin
 			}
 			clientThread.invoke(() ->
 			{
-				if (client.getGameState() != GameState.LOGGED_IN)
+				try
 				{
-					SwingUtilities.invokeLater(() -> onStatus.accept("Log in first"));
-					return;
+					if (client.getGameState() != GameState.LOGGED_IN)
+					{
+						SwingUtilities.invokeLater(() -> onStatus.accept("Log in first"));
+						return;
+					}
+					PlayerProfile profile = PlayerProfile.capture(client);
+					lastProfile = profile;
+					OwnedItems current = owned;
+					Set<Integer> ids = current == null ? Collections.emptySet() : current.allIds();
+					List<Loadout> built = b.build(ids, type, target, profile.getMagic());
+					SwingUtilities.invokeLater(() -> onBuilt.accept(built));
 				}
-				PlayerProfile profile = PlayerProfile.capture(client);
-				lastProfile = profile;
-				OwnedItems current = owned;
-				Set<Integer> ids = current == null ? Collections.emptySet() : current.allIds();
-				List<Loadout> built = b.build(ids, type, target, profile.getMagic());
-				SwingUtilities.invokeLater(() -> onBuilt.accept(built));
+				catch (RuntimeException e)
+				{
+					log.warn("Building loadouts failed", e);
+					SwingUtilities.invokeLater(() -> onStatus.accept("Could not build loadouts"));
+				}
 			});
 		}
 
@@ -370,14 +378,30 @@ public class BestAvailableDamagePlugin extends Plugin
 				onStatus.accept(BestAvailableDamagePanel.EXPORT_DISABLED_TOOLTIP);
 				return;
 			}
-			String json = payload.toJson(loadouts, target, profile, type);
-			shortlink.create(json,
-				id ->
-				{
-					LinkBrowser.browse(ShortlinkClient.CALC_URL_PREFIX + id);
-					SwingUtilities.invokeLater(() -> onStatus.accept("Opened in your browser"));
-				},
-				message -> SwingUtilities.invokeLater(() -> onStatus.accept(message)));
+			try
+			{
+				String json = payload.toJson(loadouts, target, profile, type);
+				shortlink.create(json,
+					id ->
+					{
+						try
+						{
+							LinkBrowser.browse(ShortlinkClient.CALC_URL_PREFIX + id);
+							SwingUtilities.invokeLater(() -> onStatus.accept("Opened in your browser"));
+						}
+						catch (RuntimeException e)
+						{
+							log.warn("Opening the browser failed", e);
+							SwingUtilities.invokeLater(() -> onStatus.accept("Could not open your browser"));
+						}
+					},
+					message -> SwingUtilities.invokeLater(() -> onStatus.accept(message)));
+			}
+			catch (RuntimeException e)
+			{
+				log.warn("Creating share link failed", e);
+				onStatus.accept("Could not create share link");
+			}
 		}
 
 		@Override
