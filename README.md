@@ -35,7 +35,8 @@ real damage numbers are computed.
   demons, the Twisted bow against high magic levels). These stack: the slayer
   helmet and a Salve amulet are added to every situational weapon build and to
   the top ranked build, so Emberlight plus a slayer helmet is one card; the
-  Void set goes on the best weapon with whatever else still fits. Guaranteed
+  Void set goes on the first situational weapon (or the top ranked one when
+  none applies) with whatever else still fits. Guaranteed
   builds take their slots first; at least one plain ranked build always
   remains.
 - **Open in wiki DPS calc** builds first if you have not, then sends the
@@ -49,10 +50,9 @@ worth comparing.
 
 ## Known limits
 
-- Void, Salve and other situational items are only swapped into the top
-  ranked loadout, and the list of situational items is hand-maintained; the
-  budget build uses RuneLite's cached Grand Exchange price, which is 0 for
-  untradeable and not-yet-priced items.
+- The list of situational items is hand-maintained, and the Void set is only
+  tried on one weapon; the budget build uses RuneLite's cached Grand Exchange
+  price, which is 0 for untradeable and not-yet-priced items.
 - Ammunition is matched by kind only (arrows, bolts, darts), not by what the
   weapon can actually fire.
 - Rune ownership and non-standard spellbooks are not considered.

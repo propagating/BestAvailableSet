@@ -30,8 +30,9 @@ import java.util.Optional;
 
 /**
  * Stacks the slot overlays (Salve, slayer helmet) onto every weapon base (each situational
- * weapon, then the top ranked weapon), adds a Void build on the best base with whatever
- * overlays still fit, and finally the situational weapons on their own. The result is one
+ * weapon, then the top ranked weapon), adds a Void build on the first base (the first
+ * situational weapon in table order, or the top ranked weapon when none applies) with
+ * whatever overlays still fit, and finally the situational weapons on their own. The result is one
  * card per meaningful combination, e.g. "Emberlight (vs demon, Slayer helm, on task)",
  * rather than a card per rule that never combine.
  */
@@ -51,6 +52,8 @@ public class LayeredBuilds implements GuaranteedBuild
 			bases.add(new WeaponBase(null, top));
 		}
 
+		// stacking is greedy in list order, so an earlier overlay wins a slot clash: the table's
+		// rows (none of which touch the head today) come first and the helm is appended last
 		List<SlotOverlay> overlays = new ArrayList<>(situational.overlays(ctx));
 		slayerHelm.overlay(ctx).ifPresent(overlays::add);
 		Optional<SlotOverlay> voidOverlay = voidSet.overlay(ctx);

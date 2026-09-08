@@ -119,6 +119,16 @@ public class LayeredBuildsTest
 	}
 
 	@Test
+	public void everythingOffYieldsNoGuaranteedBuilds()
+	{
+		BuildOptions off = BuildOptions.builder().situationalBuilds(false).slayerBuild(false)
+			.voidBuild(false).budgetBuild(false).build();
+		List<Loadout> loadouts = builder.build(everything, AttackType.STAB, monsters.byId(415).get(), 99, off);
+		assertEquals("Inquisitor's mace", loadouts.get(0).getName());
+		assertTrue(loadouts.stream().allMatch(l -> l.getReason() == null));
+	}
+
+	@Test
 	public void overlaysAloneStackOntoTheTopPlainBuild()
 	{
 		// no Emberlight owned: the helm goes onto the top plain weapon only
@@ -131,7 +141,7 @@ public class LayeredBuildsTest
 	}
 
 	@Test
-	public void nothingApplicableMeansPlainBuildsOnly()
+	public void noTargetSpecificItemsLeavesOnlyTheVoidBuild()
 	{
 		// Zulrah: not a slayer monster, no attributes, magic 300 (Twisted bow only matters for ranged)
 		List<Loadout> loadouts = builder.build(everything, AttackType.STAB, monsters.byId(2042).get(), 99,
