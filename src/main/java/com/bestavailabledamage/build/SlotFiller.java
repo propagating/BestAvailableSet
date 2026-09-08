@@ -145,7 +145,8 @@ public class SlotFiller
 			.thenComparing(Comparator.comparingInt(EquipmentEntry::getId).reversed());
 	}
 
-	private EquipmentEntry best(AttackType type, Predicate<EquipmentEntry> filter)
+	/** Best owned item passing the filter by {@link #preference(AttackType)}, or null. */
+	public EquipmentEntry best(AttackType type, Predicate<EquipmentEntry> filter)
 	{
 		Comparator<EquipmentEntry> order = preference(type);
 		EquipmentEntry best = null;

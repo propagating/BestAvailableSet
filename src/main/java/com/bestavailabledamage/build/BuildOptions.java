@@ -24,42 +24,44 @@
  */
 package com.bestavailabledamage.build;
 
-import com.bestavailabledamage.data.CombatStyle;
-import com.bestavailabledamage.data.EquipmentEntry;
-import com.bestavailabledamage.data.SpellEntry;
-import java.util.Map;
-import java.util.Objects;
+import java.util.function.IntUnaryOperator;
+import lombok.Builder;
 import lombok.Value;
-import lombok.With;
 
-/**
- * One candidate gear set. {@code equipment} has every slot key; a null value means empty.
- * {@code reason} is null for a plain ranked build and the label of the rule that guaranteed
- * it otherwise (also appended to {@code name} in parentheses).
- */
+/** Which guaranteed builds to make and what they need to know. */
 @Value
-@With
-public class Loadout
+@Builder(toBuilder = true)
+public class BuildOptions
 {
-	String name;
-	CombatStyle style;
-	Map<String, EquipmentEntry> equipment;
-	EquipmentEntry blowpipeDart;
-	SpellEntry spell;
-	boolean onSlayerTask;
-	String reason;
+	public static final int DEFAULT_BUDGET_MAX_PRICE = 100_000;
 
-	public EquipmentEntry weapon()
+	/** Situational items (Salve, dragon hunter weapons, ...); no config toggle. */
+	@Builder.Default
+	boolean situationalBuilds = true;
+	@Builder.Default
+	boolean slayerBuild = true;
+	@Builder.Default
+	boolean voidBuild = true;
+	@Builder.Default
+	boolean budgetBuild = true;
+	/** Per-item GE price cap for the budget build. */
+	@Builder.Default
+	int budgetMaxPrice = DEFAULT_BUDGET_MAX_PRICE;
+	/** Item id to GE price; 0 means untradeable or unknown, which counts as within the cap. */
+	@Builder.Default
+	IntUnaryOperator itemPrice = id -> 0;
+	/** True when the client confirms the current slayer task matches the target. */
+	@Builder.Default
+	boolean onSlayerTask = false;
+
+	public static BuildOptions defaults()
 	{
-		return equipment.get("weapon");
+		return builder().build();
 	}
 
-	/** Same items, dart, spell and calculator toggles; the name and reason do not matter. */
-	public boolean sameGearAs(Loadout other)
+	/** Plain ranked builds only. */
+	public static BuildOptions none()
 	{
-		return Objects.equals(equipment, other.equipment)
-			&& Objects.equals(blowpipeDart, other.blowpipeDart)
-			&& Objects.equals(spell, other.spell)
-			&& onSlayerTask == other.onSlayerTask;
+		return builder().situationalBuilds(false).slayerBuild(false).voidBuild(false).budgetBuild(false).build();
 	}
 }

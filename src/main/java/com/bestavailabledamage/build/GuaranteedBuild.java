@@ -24,42 +24,14 @@
  */
 package com.bestavailabledamage.build;
 
-import com.bestavailabledamage.data.CombatStyle;
-import com.bestavailabledamage.data.EquipmentEntry;
-import com.bestavailabledamage.data.SpellEntry;
-import java.util.Map;
-import java.util.Objects;
-import lombok.Value;
-import lombok.With;
+import java.util.List;
 
 /**
- * One candidate gear set. {@code equipment} has every slot key; a null value means empty.
- * {@code reason} is null for a plain ranked build and the label of the rule that guaranteed
- * it otherwise (also appended to {@code name} in parentheses).
+ * A rule that reserves loadout slots: given the plain ranked loadouts and the target, it
+ * returns the builds it guarantees (usually zero or one). Returned loadouts carry a
+ * {@code reason}; the builder de-duplicates them against each other and the plain builds.
  */
-@Value
-@With
-public class Loadout
+public interface GuaranteedBuild
 {
-	String name;
-	CombatStyle style;
-	Map<String, EquipmentEntry> equipment;
-	EquipmentEntry blowpipeDart;
-	SpellEntry spell;
-	boolean onSlayerTask;
-	String reason;
-
-	public EquipmentEntry weapon()
-	{
-		return equipment.get("weapon");
-	}
-
-	/** Same items, dart, spell and calculator toggles; the name and reason do not matter. */
-	public boolean sameGearAs(Loadout other)
-	{
-		return Objects.equals(equipment, other.equipment)
-			&& Objects.equals(blowpipeDart, other.blowpipeDart)
-			&& Objects.equals(spell, other.spell)
-			&& onSlayerTask == other.onSlayerTask;
-	}
+	List<Loadout> make(BuildContext ctx);
 }

@@ -40,7 +40,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/** Turns "what I own" plus an attack type and a target into up to six loadouts. Pure. */
+/**
+ * Turns "what I own" plus an attack type and a target into up to six loadouts: first the
+ * builds guaranteed by the registered rules, then plain ranked builds. Pure.
+ */
 public class LoadoutBuilder
 {
 	public static final int MAX_LOADOUTS = 6;
@@ -50,14 +53,29 @@ public class LoadoutBuilder
 	private final EquipmentCatalog catalog;
 	private final SpellCatalog spells;
 	private final WeaponRanker ranker;
+	private final List<GuaranteedBuild> guaranteedBuilds;
 
 	public LoadoutBuilder(EquipmentCatalog catalog, SpellCatalog spells, WeaponRanker ranker)
+	{
+		this(catalog, spells, ranker, standardBuilds());
+	}
+
+	public LoadoutBuilder(EquipmentCatalog catalog, SpellCatalog spells, WeaponRanker ranker,
+		List<GuaranteedBuild> guaranteedBuilds)
 	{
 		this.catalog = catalog;
 		this.spells = spells;
 		this.ranker = ranker;
+		this.guaranteedBuilds = List.copyOf(guaranteedBuilds);
 	}
 
+	/** The shipped rules, in the order their builds appear: situational, slayer, Void, budget. */
+	public static List<GuaranteedBuild> standardBuilds()
+	{
+		return List.of();
+	}
+
+	/** Plain ranked builds only; registered guaranteed builds are not consulted at all. */
 	public List<Loadout> build(Set<Integer> ownedIds, AttackType type, MonsterEntry target, int magicLevel)
 	{
 		List<EquipmentEntry> owned = new ArrayList<>();
@@ -65,6 +83,53 @@ public class LoadoutBuilder
 		{
 			catalog.byId(id).ifPresent(owned::add);
 		}
+		return plainLoadouts(owned, type, target, magicLevel);
+	}
+
+	public List<Loadout> build(Set<Integer> ownedIds, AttackType type, MonsterEntry target, int magicLevel,
+		BuildOptions options)
+	{
+		List<EquipmentEntry> owned = new ArrayList<>();
+		for (Integer id : ownedIds)
+		{
+			catalog.byId(id).ifPresent(owned::add);
+		}
+		List<Loadout> plain = plainLoadouts(owned, type, target, magicLevel);
+		if (plain.isEmpty())
+		{
+			return plain;
+		}
+		BuildContext ctx = new BuildContext(owned, type, target, magicLevel, options, plain,
+			new SlotFiller(owned), this);
+
+		List<Loadout> out = new ArrayList<>();
+		for (GuaranteedBuild rule : guaranteedBuilds)
+		{
+			for (Loadout candidate : rule.make(ctx))
+			{
+				if (out.size() < MAX_LOADOUTS - 1 && out.stream().noneMatch(candidate::sameGearAs))
+				{
+					out.add(candidate);
+				}
+			}
+		}
+		for (Loadout loadout : plain)
+		{
+			if (out.size() >= MAX_LOADOUTS)
+			{
+				break;
+			}
+			if (out.stream().noneMatch(loadout::sameGearAs))
+			{
+				out.add(loadout);
+			}
+		}
+		return out;
+	}
+
+	/** The v1 algorithm: ranked weapons, one loadout each, magic split by element weakness. */
+	public List<Loadout> plainLoadouts(List<EquipmentEntry> owned, AttackType type, MonsterEntry target, int magicLevel)
+	{
 		SlotFiller filler = new SlotFiller(owned);
 		List<EquipmentEntry> weapons = rankedWeapons(owned, type);
 
@@ -114,6 +179,25 @@ public class LoadoutBuilder
 			out.add(loadout(powered.get(i), type, filler, null, null));
 		}
 		return out;
+	}
+
+	/**
+	 * A plain loadout built around one specific owned weapon (for rules that guarantee a
+	 * weapon), with the same spell logic as {@link #plainLoadouts}. Empty when the weapon
+	 * cannot use the attack type.
+	 */
+	public Optional<Loadout> loadoutFor(EquipmentEntry weapon, BuildContext ctx)
+	{
+		if (!weapon.getSlot().equals("weapon") || cannotAttack(weapon)
+			|| !WeaponStyles.bestStyleFor(weapon.getCategory(), ctx.getType()).isPresent())
+		{
+			return Optional.empty();
+		}
+		Optional<String> element = ctx.getType() == AttackType.MAGIC && isElementalCaster(weapon)
+			? ctx.getTarget().elementWeakness() : Optional.empty();
+		Optional<SpellEntry> spell = element.flatMap(el -> spells.strongest(el, ctx.getMagicLevel()));
+		return Optional.of(loadout(weapon, ctx.getType(), ctx.getFiller(),
+			spell.isPresent() ? element.get() : null, spell.orElse(null)));
 	}
 
 	private static boolean isPoweredStaff(EquipmentEntry weapon)
@@ -170,6 +254,6 @@ public class LoadoutBuilder
 		Map<String, EquipmentEntry> gear = filler.fill(weapon, type, element);
 		EquipmentEntry dart = weapon.getName().startsWith(SlotFiller.BLOWPIPE) ? filler.bestDart() : null;
 		String name = spell == null ? weapon.getName() : weapon.getName() + " + " + spell.getName();
-		return new Loadout(name, style, gear, dart, spell);
+		return new Loadout(name, style, gear, dart, spell, false, null);
 	}
 }

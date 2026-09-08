@@ -24,42 +24,28 @@
  */
 package com.bestavailabledamage.build;
 
-import com.bestavailabledamage.data.CombatStyle;
+import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentEntry;
-import com.bestavailabledamage.data.SpellEntry;
-import java.util.Map;
-import java.util.Objects;
+import com.bestavailabledamage.data.MonsterEntry;
+import java.util.List;
 import lombok.Value;
-import lombok.With;
 
-/**
- * One candidate gear set. {@code equipment} has every slot key; a null value means empty.
- * {@code reason} is null for a plain ranked build and the label of the rule that guaranteed
- * it otherwise (also appended to {@code name} in parentheses).
- */
+/** Everything a {@link GuaranteedBuild} may look at. {@code plain} is never empty. */
 @Value
-@With
-public class Loadout
+public class BuildContext
 {
-	String name;
-	CombatStyle style;
-	Map<String, EquipmentEntry> equipment;
-	EquipmentEntry blowpipeDart;
-	SpellEntry spell;
-	boolean onSlayerTask;
-	String reason;
+	List<EquipmentEntry> owned;
+	AttackType type;
+	MonsterEntry target;
+	int magicLevel;
+	BuildOptions options;
+	List<Loadout> plain;
+	SlotFiller filler;
+	LoadoutBuilder builder;
 
-	public EquipmentEntry weapon()
+	/** The best plain ranked loadout, the base most rules swap items into. */
+	public Loadout topPlain()
 	{
-		return equipment.get("weapon");
-	}
-
-	/** Same items, dart, spell and calculator toggles; the name and reason do not matter. */
-	public boolean sameGearAs(Loadout other)
-	{
-		return Objects.equals(equipment, other.equipment)
-			&& Objects.equals(blowpipeDart, other.blowpipeDart)
-			&& Objects.equals(spell, other.spell)
-			&& onSlayerTask == other.onSlayerTask;
+		return plain.get(0);
 	}
 }
