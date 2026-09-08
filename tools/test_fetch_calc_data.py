@@ -48,7 +48,7 @@ class TrimMonstersTest(unittest.TestCase):
         raw = [
             {"id": 8058, "name": "Vorkath", "version": "Dragon Slayer II", "level": 392,
              "weakness": {"element": "fire", "severity": 40}, "attributes": ["dragon"],
-             "is_slayer_monster": True},
+             "is_slayer_monster": True, "skills": {"atk": 560, "def": 214, "hp": 750, "magic": 150, "ranged": 308, "str": 308}},
             {"id": 496, "name": "Kraken", "version": "Whirlpool", "level": 0,
              "weakness": {"element": "none", "severity": 0}, "attributes": [],
              "is_slayer_monster": True},
@@ -62,6 +62,8 @@ class TrimMonstersTest(unittest.TestCase):
         self.assertIsNone(out[2]["weaknessElement"])
         self.assertEqual(out[2]["slayerMonster"], True)
         self.assertEqual(out[2]["attributes"], ["demon"])
+        self.assertEqual(out[0]["magicLevel"], 150)
+        self.assertEqual(out[1]["magicLevel"], 0)
 
 
 class TrimSpellsTest(unittest.TestCase):

@@ -46,5 +46,14 @@
 {"id":23983,"baseId":23983,"name":"Crystal bow","version":"Active","slot":"weapon","category":"Bow","twoHanded":true,"speed":5,"str":0,"rangedStr":78,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":100,"prayer":0},
 {"id":25865,"baseId":25865,"name":"Bow of Faerdhinen","version":"Charged","slot":"weapon","category":"Bow","twoHanded":true,"speed":5,"str":0,"rangedStr":106,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":128,"prayer":0},
 {"id":22947,"baseId":22947,"name":"Rada's blessing 4","version":"","slot":"ammo","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":2},
-{"id":20220,"baseId":20220,"name":"Holy blessing","version":"","slot":"ammo","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":1}
+{"id":20220,"baseId":20220,"name":"Holy blessing","version":"","slot":"ammo","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":1},
+{"id":11865,"baseId":11865,"name":"Slayer helmet (i)","version":"","slot":"head","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":3,"ranged":3,"prayer":0},
+{"id":11665,"baseId":11665,"name":"Void melee helm","version":"Normal","slot":"head","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":11664,"baseId":11664,"name":"Void ranger helm","version":"Normal","slot":"head","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":8839,"baseId":8839,"name":"Void knight top","version":"Normal","slot":"body","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":8840,"baseId":8840,"name":"Void knight robe","version":"Normal","slot":"legs","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":8842,"baseId":8842,"name":"Void knight gloves","version":"Normal","slot":"hands","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":13072,"baseId":13072,"name":"Elite void top","version":"Normal","slot":"body","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
+{"id":13073,"baseId":13073,"name":"Elite void robe","version":"Normal","slot":"legs","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
+{"id":12018,"baseId":12018,"name":"Salve amulet(ei)","version":"","slot":"neck","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3}
 ]

@@ -1,6 +1,7 @@
 [
-{"id":8058,"name":"Vorkath","version":"Dragon Slayer II","level":392,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true},
-{"id":8059,"name":"Vorkath","version":"Post-quest","level":732,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true},
-{"id":415,"name":"Abyssal demon","version":"Standard","level":124,"weaknessElement":null,"weaknessSeverity":0,"attributes":["demon"],"slayerMonster":true},
-{"id":2215,"name":"General Graardor","version":"","level":624,"weaknessElement":"earth","weaknessSeverity":40,"attributes":[],"slayerMonster":true}
+{"id":8058,"name":"Vorkath","version":"Dragon Slayer II","level":392,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true,"magicLevel":150},
+{"id":8059,"name":"Vorkath","version":"Post-quest","level":732,"weaknessElement":"fire","weaknessSeverity":40,"attributes":["dragon","undead","fiery"],"slayerMonster":true,"magicLevel":150},
+{"id":415,"name":"Abyssal demon","version":"Standard","level":124,"weaknessElement":null,"weaknessSeverity":0,"attributes":["demon"],"slayerMonster":true,"magicLevel":1},
+{"id":2215,"name":"General Graardor","version":"","level":624,"weaknessElement":"earth","weaknessSeverity":40,"attributes":[],"slayerMonster":true,"magicLevel":80},
+{"id":2042,"name":"Zulrah","version":"Serpentine","level":725,"weaknessElement":null,"weaknessSeverity":0,"attributes":[],"slayerMonster":false,"magicLevel":300}
 ]

@@ -39,6 +39,7 @@ public class MonsterEntry
 	int weaknessSeverity;
 	List<String> attributes;
 	boolean slayerMonster;
+	int magicLevel;
 
 	public String displayName()
 	{

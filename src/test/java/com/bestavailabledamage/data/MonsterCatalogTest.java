@@ -66,5 +66,7 @@ public class MonsterCatalogTest
 		assertEquals("fire", catalog.byId(8058).get().elementWeakness().get());
 		assertFalse(catalog.byId(415).get().elementWeakness().isPresent());
 		assertEquals("General Graardor", catalog.byId(2215).get().displayName());
+		assertEquals(150, catalog.byId(8058).get().getMagicLevel());
+		assertEquals(300, catalog.byId(2042).get().getMagicLevel());
 	}
 }

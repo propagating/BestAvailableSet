@@ -86,6 +86,7 @@ def trim_monsters(raw):
             "weaknessSeverity": severity,
             "attributes": list(m.get("attributes") or []),
             "slayerMonster": bool(m.get("is_slayer_monster")),
+            "magicLevel": int((m.get("skills") or {}).get("magic") or 0),
         })
     return out
 
