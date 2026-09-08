@@ -26,41 +26,73 @@ package com.bestavailabledamage.build;
 
 import com.bestavailabledamage.data.EquipmentEntry;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * For every table row the target satisfies and the player owns an item for: a weapon row
- * becomes a plain build around that weapon; any other slot is swapped into the top plain
- * build. Always on; no config toggle.
+ * The situational-item table applied to the target: weapon rows become weapon bases (a plain
+ * build around that weapon, e.g. "vs demon" for Emberlight), other rows become slot overlays
+ * (e.g. the Salve amulet in the neck for "vs undead"). Always on; no config toggle. On its own
+ * (as a rule) it yields the bases as builds plus each overlay on the top plain weapon;
+ * {@link LayeredBuilds} stacks the overlays onto every base.
  */
 public class SituationalItemBuild implements GuaranteedBuild
 {
-	@Override
-	public List<Loadout> make(BuildContext ctx)
+	/** Applicable weapon rows, in table order, each as a plain build around the best usable owned weapon. */
+	public List<WeaponBase> weaponBases(BuildContext ctx)
 	{
+		List<WeaponBase> out = new ArrayList<>();
 		if (!ctx.getOptions().isSituationalBuilds())
 		{
-			return List.of();
+			return out;
 		}
-		List<Loadout> out = new ArrayList<>();
 		for (SituationalItem row : SituationalItems.TABLE)
 		{
-			if (!row.getCondition().test(ctx.getTarget()))
+			if (!row.getSlot().equals("weapon") || !row.getCondition().test(ctx.getTarget()))
+			{
+				continue;
+			}
+			firstUsableWeapon(row.bestPerPrefix(ctx.getFiller(), ctx.getType()), ctx)
+				.ifPresent(l -> out.add(new WeaponBase(row.getReason(), l)));
+		}
+		return out;
+	}
+
+	/** Applicable non-weapon rows, in table order, each as a one-slot overlay with the preferred owned item. */
+	public List<SlotOverlay> overlays(BuildContext ctx)
+	{
+		List<SlotOverlay> out = new ArrayList<>();
+		if (!ctx.getOptions().isSituationalBuilds())
+		{
+			return out;
+		}
+		for (SituationalItem row : SituationalItems.TABLE)
+		{
+			if (row.getSlot().equals("weapon") || !row.getCondition().test(ctx.getTarget()))
 			{
 				continue;
 			}
 			List<EquipmentEntry> candidates = row.bestPerPrefix(ctx.getFiller(), ctx.getType());
-			if (candidates.isEmpty())
+			if (!candidates.isEmpty())
 			{
-				continue;
+				out.add(new SlotOverlay(row.getReason(), Map.of(row.getSlot(), candidates.get(0)), false));
 			}
-			Optional<Loadout> built = row.getSlot().equals("weapon")
-				? firstUsableWeapon(candidates, ctx)
-				: Optional.of(swap(ctx.topPlain(), row.getSlot(), candidates.get(0)));
-			built.ifPresent(l -> out.add(l.guaranteed(row.getReason())));
+		}
+		return out;
+	}
+
+	@Override
+	public List<Loadout> make(BuildContext ctx)
+	{
+		List<Loadout> out = new ArrayList<>();
+		for (SlotOverlay overlay : overlays(ctx))
+		{
+			out.add(overlay.applyTo(ctx.topPlain()).guaranteed(overlay.getReason()));
+		}
+		for (WeaponBase base : weaponBases(ctx))
+		{
+			out.add(base.getLoadout().guaranteed(base.getReason()));
 		}
 		return out;
 	}
@@ -81,12 +113,5 @@ public class SituationalItemBuild implements GuaranteedBuild
 			}
 		}
 		return Optional.empty();
-	}
-
-	private static Loadout swap(Loadout base, String slot, EquipmentEntry item)
-	{
-		Map<String, EquipmentEntry> gear = new LinkedHashMap<>(base.getEquipment());
-		gear.put(slot, item);
-		return base.withEquipment(gear);
 	}
 }

@@ -59,7 +59,8 @@ public class SlayerHelmBuildTest
 	{
 		List<Loadout> loadouts = builder.build(everything, AttackType.STAB, monsters.byId(415).get(), 99,
 			BuildOptions.defaults());
-		assertEquals(5, loadouts.size());
+		// 1 helm build + the five plain stab builds
+		assertEquals(6, loadouts.size());
 		Loadout helm = loadouts.get(0);
 		assertEquals(SlayerHelmBuild.IF_ON_TASK, helm.getReason());
 		assertEquals("Inquisitor's mace (Slayer helm, if on task)", helm.getName());

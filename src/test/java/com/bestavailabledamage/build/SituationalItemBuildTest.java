@@ -73,8 +73,8 @@ public class SituationalItemBuildTest
 		// table order: the undead row precedes the dragon row
 		assertEquals("vs undead", loadouts.get(0).getReason());
 		assertEquals("vs dragon", loadouts.get(1).getReason());
-		// 2 guaranteed + mace, rapier, scimitar (the plain lance duplicates the guaranteed one)
-		assertEquals(5, loadouts.size());
+		// 2 guaranteed + mace, rapier, scimitar, emberlight (the plain lance duplicates the guaranteed one)
+		assertEquals(6, loadouts.size());
 	}
 
 	@Test

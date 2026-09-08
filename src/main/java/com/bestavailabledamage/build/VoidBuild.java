@@ -26,27 +26,28 @@ package com.bestavailabledamage.build;
 
 import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentEntry;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * One build in a complete Void set for the attack type: the matching helm, a top, a robe and
- * the gloves, Elite pieces preferred. The set bonus is not in any listed stat, so the plain
- * ranking never picks it; the calculator applies it from the item ids.
+ * A complete Void set for the attack type as a four-slot overlay: the matching helm, a top,
+ * a robe and the gloves, Elite pieces preferred. The set bonus is not in any listed stat, so
+ * the plain ranking never picks it; the calculator applies it from the item ids. On its own
+ * (as a rule) it yields one build on the top plain weapon; {@link LayeredBuilds} puts it on
+ * the best weapon base together with any overlay that does not clash.
  */
 public class VoidBuild implements GuaranteedBuild
 {
 	public static final String VOID = "Void";
 	public static final String ELITE_VOID = "Elite Void";
 
-	@Override
-	public List<Loadout> make(BuildContext ctx)
+	public Optional<SlotOverlay> overlay(BuildContext ctx)
 	{
 		if (!ctx.getOptions().isVoidBuild())
 		{
-			return List.of();
+			return Optional.empty();
 		}
 		AttackType type = ctx.getType();
 		EquipmentEntry helm = named(ctx, "head", helmName(type));
@@ -57,16 +58,19 @@ public class VoidBuild implements GuaranteedBuild
 		EquipmentEntry gloves = named(ctx, "hands", "void knight gloves");
 		if (helm == null || top == null || robe == null || gloves == null)
 		{
-			return List.of();
+			return Optional.empty();
 		}
-		Loadout base = ctx.topPlain();
-		Map<String, EquipmentEntry> gear = new LinkedHashMap<>(base.getEquipment());
-		gear.put("head", helm);
-		gear.put("body", top);
-		gear.put("legs", robe);
-		gear.put("hands", gloves);
 		String reason = eliteTop != null && eliteRobe != null ? ELITE_VOID : VOID;
-		return List.of(base.withEquipment(gear).guaranteed(reason));
+		return Optional.of(new SlotOverlay(reason,
+			Map.of("head", helm, "body", top, "legs", robe, "hands", gloves), false));
+	}
+
+	@Override
+	public List<Loadout> make(BuildContext ctx)
+	{
+		return overlay(ctx)
+			.map(o -> List.of(o.applyTo(ctx.topPlain()).guaranteed(o.getReason())))
+			.orElse(List.of());
 	}
 
 	private static String helmName(AttackType type)

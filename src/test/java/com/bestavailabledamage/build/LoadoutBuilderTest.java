@@ -68,8 +68,8 @@ public class LoadoutBuilderTest
 	{
 		List<Loadout> loadouts = builder.build(everything(catalog), AttackType.STAB, abyssalDemon, 99);
 		// stab-capable in fixture: rapier (39.25), inquisitor's mace via Spike (40.0), lance (33.5),
-		// dragon scimitar via Lunge (32.5)
-		assertEquals(List.of("Inquisitor's mace", "Ghrazi rapier", "Dragon hunter lance", "Dragon scimitar"),
+		// dragon scimitar via Lunge (32.5), emberlight via Lunge (19.25)
+		assertEquals(List.of("Inquisitor's mace", "Ghrazi rapier", "Dragon hunter lance", "Dragon scimitar", "Emberlight"),
 			weaponNames(loadouts));
 		Loadout rapier = loadouts.get(1);
 		assertEquals("Ghrazi rapier", rapier.getName());

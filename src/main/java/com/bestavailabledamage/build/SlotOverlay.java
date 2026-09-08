@@ -25,44 +25,35 @@
 package com.bestavailabledamage.build;
 
 import com.bestavailabledamage.data.EquipmentEntry;
-import java.util.List;
-import java.util.Locale;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
+import lombok.Value;
 
 /**
- * The best owned slayer helmet as a head overlay for every slayer monster, exported with the
- * calculator's on-task toggle so the site applies the bonus. The label says "on task" only
- * when the client confirmed the current task matches the target. On its own (as a rule) it
- * yields one build on the top plain weapon; {@link LayeredBuilds} stacks it onto every base.
+ * A swap of one or more slots that the target or the player's kit makes worth comparing
+ * (the slayer helmet, a Salve amulet, a Void set). Overlays stack onto any base build as
+ * long as they touch different slots.
  */
-public class SlayerHelmBuild implements GuaranteedBuild
+@Value
+public class SlotOverlay
 {
-	public static final String ON_TASK = "Slayer helm, on task";
-	public static final String IF_ON_TASK = "Slayer helm, if on task";
-	static final String NAME_PREFIX = "slayer helmet";
+	String reason;
+	/** Slot name to item; every slot listed is replaced. */
+	Map<String, EquipmentEntry> items;
+	/** Whether the calculator's on-task toggle must be set for the effect to apply. */
+	boolean onSlayerTask;
 
-	public Optional<SlotOverlay> overlay(BuildContext ctx)
+	public boolean clashesWith(SlotOverlay other)
 	{
-		if (!ctx.getOptions().isSlayerBuild() || !ctx.getTarget().isSlayerMonster())
-		{
-			return Optional.empty();
-		}
-		EquipmentEntry helm = ctx.getFiller().best(ctx.getType(), e -> e.getSlot().equals("head")
-			&& e.getName().toLowerCase(Locale.ROOT).startsWith(NAME_PREFIX));
-		if (helm == null)
-		{
-			return Optional.empty();
-		}
-		String reason = ctx.getOptions().isOnSlayerTask() ? ON_TASK : IF_ON_TASK;
-		return Optional.of(new SlotOverlay(reason, Map.of("head", helm), true));
+		return !Collections.disjoint(items.keySet(), other.items.keySet());
 	}
 
-	@Override
-	public List<Loadout> make(BuildContext ctx)
+	/** The base with this overlay's slots replaced; the name and reason are left to the caller. */
+	public Loadout applyTo(Loadout base)
 	{
-		return overlay(ctx)
-			.map(o -> List.of(o.applyTo(ctx.topPlain()).guaranteed(o.getReason())))
-			.orElse(List.of());
+		Map<String, EquipmentEntry> gear = new LinkedHashMap<>(base.getEquipment());
+		gear.putAll(items);
+		return base.withEquipment(gear).withOnSlayerTask(base.isOnSlayerTask() || onSlayerTask);
 	}
 }

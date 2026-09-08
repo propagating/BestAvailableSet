@@ -69,10 +69,13 @@ public class LoadoutBuilder
 		this.guaranteedBuilds = List.copyOf(guaranteedBuilds);
 	}
 
-	/** The shipped rules, in the order their builds appear: situational, slayer, Void, budget. */
+	/**
+	 * The shipped rules, in the order their builds appear: the layered situational, slayer
+	 * and Void combinations, then the budget build.
+	 */
 	public static List<GuaranteedBuild> standardBuilds()
 	{
-		return List.of(new SituationalItemBuild(), new SlayerHelmBuild(), new VoidBuild(), new BudgetBuild());
+		return List.of(new LayeredBuilds(), new BudgetBuild());
 	}
 
 	/** Plain ranked builds only; registered guaranteed builds are not consulted at all. */

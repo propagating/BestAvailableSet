@@ -91,7 +91,7 @@ public class GuaranteedBuildsTest
 		LoadoutBuilder builder = new LoadoutBuilder(catalog, spells, new SpeedAdjustedRanker(),
 			List.of(headSwap("first", 24271, catalog)));
 		List<Loadout> loadouts = builder.build(everything, AttackType.STAB, abyssalDemon, 99);
-		assertEquals(4, loadouts.size());
+		assertEquals(5, loadouts.size());
 		assertTrue(loadouts.stream().allMatch(l -> l.getReason() == null));
 	}
 
@@ -102,7 +102,7 @@ public class GuaranteedBuildsTest
 		GuaranteedBuild same = ctx -> List.of(ctx.topPlain().withReason("same").withName("same"));
 		LoadoutBuilder builder = new LoadoutBuilder(catalog, spells, new SpeedAdjustedRanker(), List.of(same));
 		List<Loadout> loadouts = builder.build(everything, AttackType.STAB, abyssalDemon, 99, BuildOptions.defaults());
-		assertEquals(4, loadouts.size());
+		assertEquals(5, loadouts.size());
 		assertEquals("same", loadouts.get(0).getReason());
 		assertEquals("Ghrazi rapier", loadouts.get(1).getName());
 	}

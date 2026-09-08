@@ -32,8 +32,12 @@ real damage numbers are computed.
   items at or under a per-item GE price you choose, and builds around items the
   target makes relevant (Salve amulet against the undead, dragon hunter weapons
   against dragons, Keris against kalphites, Arclight and Emberlight against
-  demons, the Twisted bow against high magic levels). Guaranteed builds take
-  their slots first; at least one plain ranked build always remains.
+  demons, the Twisted bow against high magic levels). These stack: the slayer
+  helmet and a Salve amulet are added to every situational weapon build and to
+  the top ranked build, so Emberlight plus a slayer helmet is one card; the
+  Void set goes on the best weapon with whatever else still fits. Guaranteed
+  builds take their slots first; at least one plain ranked build always
+  remains.
 - **Open in wiki DPS calc** builds first if you have not, then sends the
   loadouts, your base levels, the best offensive prayer you can use and the
   target to the calculator's share-link service and opens the link. This is
