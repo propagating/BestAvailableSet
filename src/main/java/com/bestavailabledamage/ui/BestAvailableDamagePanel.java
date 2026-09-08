@@ -102,6 +102,8 @@ public class BestAvailableDamagePanel extends PluginPanel
 	// second build()/export() while the first one's callback hasn't landed yet.
 	private boolean building;
 	private boolean exporting;
+	// set by export() when it had to build first; the build callback exports when this is true
+	private boolean exportAfterBuild;
 
 	public BestAvailableDamagePanel(Actions actions)
 	{
@@ -296,8 +298,10 @@ public class BestAvailableDamagePanel extends PluginPanel
 	public void refreshExportState()
 	{
 		boolean configEnabled = actions.exportEnabled();
-		exportButton.setEnabled(configEnabled && !exporting && !loadouts.isEmpty());
-		exportButton.setToolTipText(configEnabled ? "Create a share link and open it in your browser" : EXPORT_DISABLED_TOOLTIP);
+		exportButton.setEnabled(configEnabled && !exporting && !building && selected != null && monsters != null);
+		exportButton.setToolTipText(configEnabled
+			? "Build (if needed), create a share link and open it in your browser"
+			: EXPORT_DISABLED_TOOLTIP);
 	}
 
 	private void refreshResults()
@@ -321,6 +325,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 	private void updateBuildEnabled()
 	{
 		buildButton.setEnabled(selected != null && monsters != null && !building);
+		refreshExportState();
 	}
 
 	/**
@@ -341,7 +346,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 		cards.revalidate();
 		cards.repaint();
 		refreshExportState();
-		status.setText("Press Build loadouts to refresh");
+		status.setText("Press Build loadouts or Open to refresh");
 	}
 
 	private void build()
@@ -379,8 +384,17 @@ public class BestAvailableDamagePanel extends PluginPanel
 			status.setText(built.isEmpty() ? " " : built.size() + " loadout(s) for " + buildTarget.displayName());
 			updateBuildEnabled();
 			refreshExportState();
+			if (exportAfterBuild)
+			{
+				exportAfterBuild = false;
+				if (!built.isEmpty())
+				{
+					export();
+				}
+			}
 		}, message ->
 		{
+			exportAfterBuild = false;
 			building = false;
 			status.setText(message);
 			updateBuildEnabled();
@@ -389,8 +403,19 @@ public class BestAvailableDamagePanel extends PluginPanel
 
 	private void export()
 	{
-		if (loadouts.isEmpty() || builtType == null || builtTarget == null || exporting)
+		if (exporting || building)
 		{
+			return;
+		}
+		boolean stale = loadouts.isEmpty() || builtType != attackType.getSelectedItem() || builtTarget != selected;
+		if (stale)
+		{
+			if (selected == null)
+			{
+				return;
+			}
+			exportAfterBuild = true;
+			build();
 			return;
 		}
 		exporting = true;
@@ -413,5 +438,6 @@ public class BestAvailableDamagePanel extends PluginPanel
 		loadouts = Collections.emptyList();
 		builtType = null;
 		builtTarget = null;
+		exportAfterBuild = false;
 	}
 }

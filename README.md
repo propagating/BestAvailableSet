@@ -25,6 +25,17 @@ real damage numbers are computed.
   spell of that element you can cast (and a matching tome if you own one),
   and the remaining slots (up to six in total) use powered staves; if you own
   fewer than three of one kind, the other kind fills the gap.
+- Some builds are **guaranteed** a slot whether or not their stats rank: a
+  slayer helmet build for every slayer monster (exported with the calculator's
+  on-task toggle, and labelled "on task" when your current task matches), a
+  Void or Elite Void build when you own the full set, a budget build using only
+  items at or under a per-item GE price you choose, and builds around items the
+  target makes relevant (Salve amulet against the undead, dragon hunter weapons
+  against dragons, Keris against kalphites, Arclight and Emberlight against
+  demons, the Twisted bow against high magic levels). Guaranteed builds take
+  their slots first; at least one plain ranked build always remains.
+- **Open in wiki DPS calc** builds first if you have not, so the whole thing is
+  one click once the export is enabled.
 - **Open in wiki DPS calc** sends the loadouts, your base levels, the best
   offensive prayer you can use and the target to the calculator's share-link
   service and opens the link. This is off by default; enable *Export to wiki
@@ -64,3 +75,7 @@ Standard library only. Commit the regenerated JSON files under
 
 - **Export to wiki calc** (default: off) - allow the export button to create
   a share link on tools.runescape.wiki. Submits your IP address to that server.
+- **Slayer helmet build**, **Void build**, **Budget build** (default: on) -
+  reserve a loadout slot for each of these when it can be made.
+- **Budget max item price** (default: 100000) - Grand Exchange price per item
+  for the budget build; untradeable items count as free.

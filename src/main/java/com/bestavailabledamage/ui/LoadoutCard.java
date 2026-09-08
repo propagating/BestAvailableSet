@@ -29,6 +29,7 @@ import com.bestavailabledamage.build.LoadoutBuilder;
 import com.bestavailabledamage.data.EquipmentEntry;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -44,10 +45,23 @@ public class LoadoutCard extends JPanel
 		setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		setBorder(new EmptyBorder(6, 8, 6, 8));
 
-		JLabel title = new JLabel(loadout.getName());
+		JPanel heading = new JPanel();
+		heading.setLayout(new BoxLayout(heading, BoxLayout.Y_AXIS));
+		heading.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		String titleText = loadout.getReason() == null ? loadout.getName()
+			: loadout.getName().substring(0, loadout.getName().length() - loadout.getReason().length() - 3);
+		JLabel title = new JLabel(titleText);
 		title.setFont(FontManager.getRunescapeBoldFont());
 		title.setForeground(ColorScheme.BRAND_ORANGE);
-		add(title, BorderLayout.NORTH);
+		heading.add(title);
+		if (loadout.getReason() != null)
+		{
+			JLabel reason = new JLabel(loadout.getReason());
+			reason.setFont(FontManager.getRunescapeSmallFont());
+			reason.setForeground(ColorScheme.PROGRESS_COMPLETE_COLOR);
+			heading.add(reason);
+		}
+		add(heading, BorderLayout.NORTH);
 
 		JPanel rows = new JPanel(new GridLayout(0, 1, 0, 1));
 		rows.setBackground(ColorScheme.DARKER_GRAY_COLOR);
