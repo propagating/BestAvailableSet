@@ -24,6 +24,7 @@
  */
 package com.bestavailabledamage;
 
+import com.bestavailabledamage.build.BuildOptions;
 import com.bestavailabledamage.build.Loadout;
 import com.bestavailabledamage.build.LoadoutBuilder;
 import com.bestavailabledamage.build.SpeedAdjustedRanker;
@@ -383,7 +384,15 @@ public class BestAvailableDamagePlugin extends Plugin
 					lastProfile = profile;
 					OwnedItems current = owned;
 					Set<Integer> ids = current == null ? Collections.emptySet() : current.allIds();
-					List<Loadout> built = b.build(ids, type, target, profile.getMagic());
+					BuildOptions options = BuildOptions.builder()
+						.slayerBuild(config.guaranteedSlayerBuild())
+						.voidBuild(config.guaranteedVoidBuild())
+						.budgetBuild(config.guaranteedBudgetBuild())
+						.budgetMaxPrice(config.budgetMaxPrice())
+						.itemPrice(itemManager::getItemPrice)
+						.onSlayerTask(profile.slayerTaskMatches(target))
+						.build();
+					List<Loadout> built = b.build(ids, type, target, profile.getMagic(), options);
 					SwingUtilities.invokeLater(() -> onBuilt.accept(built));
 				}
 				catch (RuntimeException e)

@@ -41,6 +41,27 @@
         "ring": null
       },
       "spell": {"name": "Fire Surge"}
+    },
+    {
+      "name": "Ghrazi rapier (Slayer helm, on task)",
+      "style": {"name": "Lunge", "type": "stab", "stance": "Aggressive"},
+      "skills": {"atk": 99, "str": 99, "def": 90, "ranged": 95, "magic": 94, "prayer": 77, "hp": 99, "mining": 85, "herblore": 80},
+      "prayers": [13],
+      "equipment": {
+        "head": {"id": 11865},
+        "cape": {"id": 21295},
+        "neck": {"id": 19553},
+        "ammo": null,
+        "weapon": {"id": 22324},
+        "body": {"id": 11832},
+        "shield": {"id": 22322},
+        "legs": {"id": 11834},
+        "hands": {"id": 22981},
+        "feet": {"id": 13239},
+        "ring": {"id": 28307}
+      },
+      "spell": null,
+      "buffs": {"onSlayerTask": true}
     }
   ],
   "monster": {

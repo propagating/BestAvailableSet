@@ -26,6 +26,7 @@ package com.bestavailabledamage.export;
 
 import com.bestavailabledamage.build.Loadout;
 import com.bestavailabledamage.build.LoadoutBuilder;
+import com.bestavailabledamage.build.SlayerHelmBuild;
 import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.CombatStyle;
 import com.bestavailabledamage.data.EquipmentCatalog;
@@ -77,12 +78,17 @@ public class SharePayloadTest
 			gear("weapon", 12926),
 			catalog.byId(11230).get(),
 			new SpellEntry("Fire Surge", 24, "fire", 95), false, null);
+		Loadout slayer = new Loadout("Ghrazi rapier (Slayer helm, on task)",
+			new CombatStyle("Lunge", AttackType.STAB, "Aggressive"),
+			gear("head", 11865, "cape", 21295, "neck", 19553, "weapon", 22324, "body", 11832,
+				"shield", 22322, "legs", 11834, "hands", 22981, "feet", 13239, "ring", 28307),
+			null, null, true, SlayerHelmBuild.ON_TASK);
 		MonsterEntry vorkath = MonsterCatalogTest.fixture().byId(8058).get();
 		PlayerProfile profile = PlayerProfile.builder().attack(99).strength(99).defence(90).ranged(95)
 			.magic(94).prayer(77).hitpoints(99).mining(85).herblore(80)
 			.rigourUnlocked(true).auguryUnlocked(true).build();
 
-		String json = new SharePayload(new Gson()).toJson(List.of(rapier, blowpipe), vorkath, profile, AttackType.STAB);
+		String json = new SharePayload(new Gson()).toJson(List.of(rapier, blowpipe, slayer), vorkath, profile, AttackType.STAB);
 
 		JsonParser parser = new JsonParser();
 		JsonElement expected = parser.parse(new InputStreamReader(

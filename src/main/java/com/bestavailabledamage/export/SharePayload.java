@@ -134,6 +134,15 @@ public class SharePayload
 			spell.addProperty("name", loadout.getSpell().getName());
 			o.add("spell", spell);
 		}
+
+		if (loadout.isOnSlayerTask())
+		{
+			// the calculator deep-merges an imported loadout over its defaults, so only the
+			// toggles we set need to travel
+			JsonObject buffs = new JsonObject();
+			buffs.addProperty("onSlayerTask", true);
+			o.add("buffs", buffs);
+		}
 		return o;
 	}
 

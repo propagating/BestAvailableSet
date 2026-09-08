@@ -27,6 +27,8 @@ package com.bestavailabledamage;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
 
 @ConfigGroup(BestAvailableDamageConfig.GROUP)
 public interface BestAvailableDamageConfig extends Config
@@ -43,5 +45,61 @@ public interface BestAvailableDamageConfig extends Config
 	default boolean exportToWikiCalc()
 	{
 		return false;
+	}
+
+	@ConfigSection(
+		name = "Guaranteed builds",
+		description = "Builds that always get one of the six loadout slots when they can be made",
+		position = 2
+	)
+	String guaranteedSection = "guaranteed";
+
+	@ConfigItem(
+		keyName = "guaranteedSlayerBuild",
+		name = "Slayer helmet build",
+		description = "For slayer monsters, one loadout wears your slayer helmet, exported with the calculator's on-task toggle",
+		section = guaranteedSection,
+		position = 1
+	)
+	default boolean guaranteedSlayerBuild()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "guaranteedVoidBuild",
+		name = "Void build",
+		description = "One loadout in a full Void or Elite Void set when you own it",
+		section = guaranteedSection,
+		position = 2
+	)
+	default boolean guaranteedVoidBuild()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "guaranteedBudgetBuild",
+		name = "Budget build",
+		description = "One loadout using only items at or under the price below (untradeables count as free)",
+		section = guaranteedSection,
+		position = 3
+	)
+	default boolean guaranteedBudgetBuild()
+	{
+		return true;
+	}
+
+	@Range(min = 0)
+	@ConfigItem(
+		keyName = "budgetMaxPrice",
+		name = "Budget max item price",
+		description = "Grand Exchange price per item for the budget build",
+		section = guaranteedSection,
+		position = 4
+	)
+	default int budgetMaxPrice()
+	{
+		return 100_000;
 	}
 }
