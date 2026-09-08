@@ -80,6 +80,17 @@ public class VoidBuildTest
 	}
 
 	@Test
+	public void eliteTopWithRegularRobeIsLabelledVoid()
+	{
+		Set<Integer> partialElite = new HashSet<>(everything);
+		partialElite.remove(13073);
+		Loadout v = voidBuild(builder.build(partialElite, AttackType.STAB, abyssalDemon, 99, BuildOptions.defaults())).get();
+		assertEquals(VoidBuild.VOID, v.getReason());
+		assertEquals("Elite void top", v.getEquipment().get("body").getName());
+		assertEquals("Void knight robe", v.getEquipment().get("legs").getName());
+	}
+
+	@Test
 	public void absentWithoutGlovesWithoutTheHelmForTheTypeOrWhenSwitchedOff()
 	{
 		Set<Integer> noGloves = new HashSet<>(everything);

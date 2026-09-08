@@ -381,7 +381,16 @@ public class BestAvailableDamagePanel extends PluginPanel
 			}
 			cards.revalidate();
 			cards.repaint();
-			status.setText(built.isEmpty() ? " " : built.size() + " loadout(s) for " + buildTarget.displayName());
+			if (built.isEmpty())
+			{
+				status.setText(exportAfterBuild
+					? "Nothing to export: no " + type.calcName() + " weapon found in your storage"
+					: " ");
+			}
+			else
+			{
+				status.setText(built.size() + " loadout(s) for " + buildTarget.displayName());
+			}
 			updateBuildEnabled();
 			refreshExportState();
 			if (exportAfterBuild)

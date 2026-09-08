@@ -24,6 +24,7 @@
  */
 package com.bestavailabledamage.build;
 
+import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentEntry;
 import com.bestavailabledamage.data.MonsterEntry;
 import java.util.List;
@@ -55,5 +56,24 @@ public class SituationalItem
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * The best owned item for this row, honouring {@code namePrefixes} as a preference order:
+	 * the first prefix with any owned match wins, even if a later prefix's match would rank
+	 * higher on stats alone. Null when nothing owned matches any prefix.
+	 */
+	public EquipmentEntry bestOwned(SlotFiller filler, AttackType type)
+	{
+		for (String prefix : namePrefixes)
+		{
+			EquipmentEntry item = filler.best(type, e -> e.getSlot().equals(slot)
+				&& e.getName().toLowerCase(Locale.ROOT).startsWith(prefix));
+			if (item != null)
+			{
+				return item;
+			}
+		}
+		return null;
 	}
 }

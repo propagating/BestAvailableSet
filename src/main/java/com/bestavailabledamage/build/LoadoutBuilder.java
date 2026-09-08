@@ -113,7 +113,10 @@ public class LoadoutBuilder
 				}
 			}
 		}
-		for (Loadout loadout : plain)
+		// re-ranked without the cap that dropped `plain` at MAX_LOADOUTS, so a plain build
+		// that turns out to duplicate a guaranteed one does not cost the fill a slot
+		List<Loadout> fill = plainLoadouts(owned, type, target, magicLevel, MAX_LOADOUTS + out.size());
+		for (Loadout loadout : fill)
 		{
 			if (out.size() >= MAX_LOADOUTS)
 			{
@@ -130,6 +133,13 @@ public class LoadoutBuilder
 	/** The v1 algorithm: ranked weapons, one loadout each, magic split by element weakness. */
 	public List<Loadout> plainLoadouts(List<EquipmentEntry> owned, AttackType type, MonsterEntry target, int magicLevel)
 	{
+		return plainLoadouts(owned, type, target, magicLevel, MAX_LOADOUTS);
+	}
+
+	/** As above, capped at {@code limit} loadouts instead of always {@link #MAX_LOADOUTS}. */
+	public List<Loadout> plainLoadouts(List<EquipmentEntry> owned, AttackType type, MonsterEntry target,
+		int magicLevel, int limit)
+	{
 		SlotFiller filler = new SlotFiller(owned);
 		List<EquipmentEntry> weapons = rankedWeapons(owned, type);
 
@@ -141,7 +151,7 @@ public class LoadoutBuilder
 		{
 			for (EquipmentEntry weapon : weapons)
 			{
-				if (out.size() >= MAX_LOADOUTS)
+				if (out.size() >= limit)
 				{
 					break;
 				}
@@ -150,7 +160,7 @@ public class LoadoutBuilder
 			return out;
 		}
 
-		// elemental group on castable staves, then powered staves, three and three (spill over)
+		// elemental group on castable staves, then powered staves, half and half (spill over)
 		List<EquipmentEntry> casters = new ArrayList<>();
 		List<EquipmentEntry> powered = new ArrayList<>();
 		for (EquipmentEntry w : weapons)
@@ -167,9 +177,9 @@ public class LoadoutBuilder
 			// but cannot autocast a spell, so they are excluded from the elemental split here;
 			// they still appear in the single-group path above when there is no weakness.
 		}
-		int half = MAX_LOADOUTS / 2;
-		int casterCount = Math.min(casters.size(), Math.max(half, MAX_LOADOUTS - powered.size()));
-		int poweredCount = Math.min(powered.size(), MAX_LOADOUTS - casterCount);
+		int half = limit / 2;
+		int casterCount = Math.min(casters.size(), Math.max(half, limit - powered.size()));
+		int poweredCount = Math.min(powered.size(), limit - casterCount);
 		for (int i = 0; i < casterCount; i++)
 		{
 			out.add(loadout(casters.get(i), type, filler, element.get(), spell.get()));

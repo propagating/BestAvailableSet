@@ -29,6 +29,7 @@ import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.DBTableID;
 import net.runelite.api.gameval.VarPlayerID;
+import net.runelite.api.gameval.VarbitID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -74,6 +75,21 @@ public class PlayerProfileTest
 		when(client.getDBTableField(7, DBTableID.SlayerTask.COL_NAME_UPPERCASE, 0))
 			.thenReturn(new Object[]{"Abyssal demons"});
 		assertEquals("Abyssal demons", PlayerProfile.currentSlayerTask(client));
+	}
+
+	@Test
+	public void readsABossTaskThroughTheSublist()
+	{
+		Client client = mock(Client.class);
+		when(client.getVarpValue(VarPlayerID.SLAYER_COUNT)).thenReturn(3);
+		when(client.getVarpValue(VarPlayerID.SLAYER_TARGET)).thenReturn(98);
+		when(client.getVarbitValue(VarbitID.SLAYER_TARGET_BOSSID)).thenReturn(5);
+		when(client.getDBRowsByValue(eq(DBTableID.SlayerTaskSublist.ID),
+			eq(DBTableID.SlayerTaskSublist.COL_TASK_SUBTABLE_ID), eq(0), eq(5))).thenReturn(List.of(21));
+		when(client.getDBTableField(21, DBTableID.SlayerTaskSublist.COL_TASK, 0)).thenReturn(new Object[]{33});
+		when(client.getDBTableField(33, DBTableID.SlayerTask.COL_NAME_UPPERCASE, 0))
+			.thenReturn(new Object[]{"Vorkath"});
+		assertEquals("Vorkath", PlayerProfile.currentSlayerTask(client));
 	}
 
 	@Test

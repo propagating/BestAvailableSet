@@ -24,51 +24,43 @@
  */
 package com.bestavailabledamage.build;
 
+import com.bestavailabledamage.data.AttackType;
+import com.bestavailabledamage.data.CombatStyle;
+import com.bestavailabledamage.data.EquipmentCatalog;
+import com.bestavailabledamage.data.EquipmentCatalogTest;
 import com.bestavailabledamage.data.EquipmentEntry;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
-/**
- * For every table row the target satisfies and the player owns an item for: a weapon row
- * becomes a plain build around that weapon; any other slot is swapped into the top plain
- * build. Always on; no config toggle.
- */
-public class SituationalItemBuild implements GuaranteedBuild
+public class LoadoutTest
 {
-	@Override
-	public List<Loadout> make(BuildContext ctx)
+	private final EquipmentCatalog catalog = EquipmentCatalogTest.fixture();
+	private final CombatStyle style = new CombatStyle("Lunge", AttackType.STAB, "Aggressive");
+
+	private Loadout loadout(String name, String reason)
 	{
-		if (!ctx.getOptions().isSituationalBuilds())
-		{
-			return List.of();
-		}
-		List<Loadout> out = new ArrayList<>();
-		for (SituationalItem row : SituationalItems.TABLE)
-		{
-			if (!row.getCondition().test(ctx.getTarget()))
-			{
-				continue;
-			}
-			EquipmentEntry item = row.bestOwned(ctx.getFiller(), ctx.getType());
-			if (item == null)
-			{
-				continue;
-			}
-			Optional<Loadout> built = row.getSlot().equals("weapon")
-				? ctx.getBuilder().loadoutFor(item, ctx)
-				: Optional.of(swap(ctx.topPlain(), row.getSlot(), item));
-			built.ifPresent(l -> out.add(l.guaranteed(row.getReason())));
-		}
-		return out;
+		EquipmentEntry rapier = catalog.byId(22324).get();
+		Map<String, EquipmentEntry> gear = new LinkedHashMap<>();
+		gear.put("weapon", rapier);
+		return new Loadout(name, style, gear, null, null, false, reason);
 	}
 
-	private static Loadout swap(Loadout base, String slot, EquipmentEntry item)
+	@Test
+	public void guaranteedAppendsTheReasonAndBaseNameStripsIt()
 	{
-		Map<String, EquipmentEntry> gear = new LinkedHashMap<>(base.getEquipment());
-		gear.put(slot, item);
-		return base.withEquipment(gear);
+		Loadout base = loadout("Ghrazi rapier", null);
+		Loadout guaranteed = base.guaranteed("vs undead");
+		assertEquals("vs undead", guaranteed.getReason());
+		assertEquals("Ghrazi rapier (vs undead)", guaranteed.getName());
+		assertEquals("Ghrazi rapier", guaranteed.baseName());
+	}
+
+	@Test
+	public void baseNameLeavesAnUnexpectedNameAlone()
+	{
+		Loadout odd = loadout("Ghrazi rapier", null).withReason("x");
+		assertEquals("Ghrazi rapier", odd.baseName());
 	}
 }

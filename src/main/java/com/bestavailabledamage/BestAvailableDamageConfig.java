@@ -24,6 +24,7 @@
  */
 package com.bestavailabledamage;
 
+import com.bestavailabledamage.build.BuildOptions;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -100,6 +101,6 @@ public interface BestAvailableDamageConfig extends Config
 	)
 	default int budgetMaxPrice()
 	{
-		return 100_000;
+		return BuildOptions.DEFAULT_BUDGET_MAX_PRICE;
 	}
 }

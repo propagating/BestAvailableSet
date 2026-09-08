@@ -29,11 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.IntUnaryOperator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The best plain build using only items at or under the configured GE price. A price of 0
  * (untradeable, or not priced yet this session) counts as within the cap.
  */
+@Slf4j
 public class BudgetBuild implements GuaranteedBuild
 {
 	@Override
@@ -46,12 +48,17 @@ public class BudgetBuild implements GuaranteedBuild
 		}
 		int cap = options.getBudgetMaxPrice();
 		List<EquipmentEntry> cheap = new ArrayList<>();
+		int[] failures = {0};
 		for (EquipmentEntry e : ctx.getOwned())
 		{
-			if (price(options.getItemPrice(), e.getId()) <= cap)
+			if (price(options.getItemPrice(), e.getId(), failures) <= cap)
 			{
 				cheap.add(e);
 			}
+		}
+		if (failures[0] > 0)
+		{
+			log.debug("{} item price lookups failed; treated as free", failures[0]);
 		}
 		List<Loadout> plain = ctx.getBuilder().plainLoadouts(cheap, ctx.getType(), ctx.getTarget(), ctx.getMagicLevel());
 		if (plain.isEmpty())
@@ -60,10 +67,10 @@ public class BudgetBuild implements GuaranteedBuild
 		}
 		Loadout base = plain.get(0);
 		String reason = "Budget, under " + formatGp(cap);
-		return List.of(base.withReason(reason).withName(base.getName() + " (" + reason + ")"));
+		return List.of(base.guaranteed(reason));
 	}
 
-	private static int price(IntUnaryOperator lookup, int id)
+	private static int price(IntUnaryOperator lookup, int id, int[] failures)
 	{
 		try
 		{
@@ -71,6 +78,7 @@ public class BudgetBuild implements GuaranteedBuild
 		}
 		catch (RuntimeException e)
 		{
+			failures[0]++;
 			return 0;
 		}
 	}

@@ -58,10 +58,4 @@ public class BuildOptions
 	{
 		return builder().build();
 	}
-
-	/** Plain ranked builds only. */
-	public static BuildOptions none()
-	{
-		return builder().situationalBuilds(false).slayerBuild(false).voidBuild(false).budgetBuild(false).build();
-	}
 }

@@ -31,7 +31,10 @@ import java.util.function.Predicate;
 /**
  * Items whose value depends on the target and is not in any listed bonus, so the plain
  * ranking would never choose them. Game facts, hand-maintained; the calculator applies the
- * actual effect from the item id and the target.
+ * actual effect from the item id and the target. A row's {@code namePrefixes} are in
+ * preference order: the first prefix with any owned match wins over a later, better-ranked one
+ * (e.g. Salve amulet's enchanted, imbued variants beat the plain amulet even though they carry
+ * identical listed stats).
  */
 public final class SituationalItems
 {
@@ -39,7 +42,8 @@ public final class SituationalItems
 	static final int TWISTED_BOW_MAGIC_LEVEL = 200;
 
 	public static final List<SituationalItem> TABLE = List.of(
-		new SituationalItem("vs undead", "neck", List.of("salve amulet"), attribute("undead")),
+		new SituationalItem("vs undead", "neck",
+			List.of("salve amulet(ei)", "salve amulet(i)", "salve amulet (e)", "salve amulet"), attribute("undead")),
 		new SituationalItem("vs dragon", "weapon",
 			List.of("dragon hunter lance", "dragon hunter crossbow", "dragon hunter wand"), attribute("dragon")),
 		new SituationalItem("vs kalphite", "weapon", List.of("keris"), attribute("kalphite")),

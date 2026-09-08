@@ -31,6 +31,7 @@ import com.bestavailabledamage.data.EquipmentEntry;
 import com.bestavailabledamage.data.MonsterCatalog;
 import com.bestavailabledamage.data.MonsterCatalogTest;
 import com.bestavailabledamage.data.SpellCatalogTest;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -113,6 +114,22 @@ public class SituationalItemBuildTest
 		List<Loadout> off = builder.build(everything, AttackType.STAB, monsters.byId(8058).get(), 99,
 			BuildOptions.builder().situationalBuilds(false).build());
 		assertTrue(off.stream().allMatch(l -> l.getReason() == null));
+	}
+
+	@Test
+	public void preferredSalveVariantWinsOverThePlainOne()
+	{
+		List<Loadout> both = builder.build(everything, AttackType.STAB, monsters.byId(8058).get(), 99,
+			BuildOptions.defaults());
+		Loadout salve = withReason(both, "vs undead").get();
+		assertEquals("Salve amulet(ei)", salve.getEquipment().get("neck").getName());
+
+		Set<Integer> onlyPlain = new HashSet<>(everything);
+		onlyPlain.remove(12018);
+		List<Loadout> plainOnly = builder.build(onlyPlain, AttackType.STAB, monsters.byId(8058).get(), 99,
+			BuildOptions.defaults());
+		Loadout salvePlain = withReason(plainOnly, "vs undead").get();
+		assertEquals("Salve amulet", salvePlain.getEquipment().get("neck").getName());
 	}
 
 	@Test

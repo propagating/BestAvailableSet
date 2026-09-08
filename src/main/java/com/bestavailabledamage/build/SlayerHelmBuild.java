@@ -58,7 +58,6 @@ public class SlayerHelmBuild implements GuaranteedBuild
 		Map<String, EquipmentEntry> gear = new LinkedHashMap<>(base.getEquipment());
 		gear.put("head", helm);
 		String reason = ctx.getOptions().isOnSlayerTask() ? ON_TASK : IF_ON_TASK;
-		return List.of(base.withEquipment(gear).withOnSlayerTask(true).withReason(reason)
-			.withName(base.getName() + " (" + reason + ")"));
+		return List.of(base.withEquipment(gear).withOnSlayerTask(true).guaranteed(reason));
 	}
 }

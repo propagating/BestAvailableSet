@@ -62,4 +62,24 @@ public class Loadout
 			&& Objects.equals(spell, other.spell)
 			&& onSlayerTask == other.onSlayerTask;
 	}
+
+	/**
+	 * Marks this loadout as guaranteed by a rule: sets {@code reason} and appends it to the
+	 * name in parentheses. The contract every caller (and {@link #baseName()}) relies on is
+	 * that the result's name always ends with {@code " (" + reason + ")"}.
+	 */
+	public Loadout guaranteed(String reason)
+	{
+		return withReason(reason).withName(name + " (" + reason + ")");
+	}
+
+	/** The name without the {@link #guaranteed(String)} suffix, or the name unchanged without one. */
+	public String baseName()
+	{
+		if (reason != null && name.endsWith(" (" + reason + ")"))
+		{
+			return name.substring(0, name.length() - reason.length() - 3);
+		}
+		return name;
+	}
 }

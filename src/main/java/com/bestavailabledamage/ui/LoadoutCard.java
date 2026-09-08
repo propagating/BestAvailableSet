@@ -48,9 +48,7 @@ public class LoadoutCard extends JPanel
 		JPanel heading = new JPanel();
 		heading.setLayout(new BoxLayout(heading, BoxLayout.Y_AXIS));
 		heading.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		String titleText = loadout.getReason() == null ? loadout.getName()
-			: loadout.getName().substring(0, loadout.getName().length() - loadout.getReason().length() - 3);
-		JLabel title = new JLabel(titleText);
+		JLabel title = new JLabel(loadout.baseName());
 		title.setFont(FontManager.getRunescapeBoldFont());
 		title.setForeground(ColorScheme.BRAND_ORANGE);
 		heading.add(title);

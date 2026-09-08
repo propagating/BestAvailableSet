@@ -66,7 +66,7 @@ public class VoidBuild implements GuaranteedBuild
 		gear.put("legs", robe);
 		gear.put("hands", gloves);
 		String reason = eliteTop != null && eliteRobe != null ? ELITE_VOID : VOID;
-		return List.of(base.withEquipment(gear).withReason(reason).withName(base.getName() + " (" + reason + ")"));
+		return List.of(base.withEquipment(gear).guaranteed(reason));
 	}
 
 	private static String helmName(AttackType type)

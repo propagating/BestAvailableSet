@@ -34,21 +34,21 @@ real damage numbers are computed.
   against dragons, Keris against kalphites, Arclight and Emberlight against
   demons, the Twisted bow against high magic levels). Guaranteed builds take
   their slots first; at least one plain ranked build always remains.
-- **Open in wiki DPS calc** builds first if you have not, so the whole thing is
-  one click once the export is enabled.
-- **Open in wiki DPS calc** sends the loadouts, your base levels, the best
-  offensive prayer you can use and the target to the calculator's share-link
-  service and opens the link. This is off by default; enable *Export to wiki
-  calc* in the plugin settings. Prayers, potions and boss-specific inputs can
-  be adjusted on the site.
+- **Open in wiki DPS calc** builds first if you have not, then sends the
+  loadouts, your base levels, the best offensive prayer you can use and the
+  target to the calculator's share-link service and opens the link. This is
+  off by default; enable *Export to wiki calc* in the plugin settings.
+  Prayers, potions and boss-specific inputs can be adjusted on the site.
 
 The plugin does not compute damage itself. It only decides which loadouts are
 worth comparing.
 
 ## Known limits
 
-- Gear whose value is situational and not in its listed bonuses (Void, Slayer
-  helmet, Salve amulet) is never picked. Use the calculator's own toggles.
+- Void, Salve and other situational items are only swapped into the top
+  ranked loadout, and the list of situational items is hand-maintained; the
+  budget build uses RuneLite's cached Grand Exchange price, which is 0 for
+  untradeable and not-yet-priced items.
 - Ammunition is matched by kind only (arrows, bolts, darts), not by what the
   weapon can actually fire.
 - Rune ownership and non-standard spellbooks are not considered.
