@@ -56,5 +56,6 @@
 {"id":13072,"baseId":13072,"name":"Elite void top","version":"Normal","slot":"body","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
 {"id":13073,"baseId":13073,"name":"Elite void robe","version":"Normal","slot":"legs","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
 {"id":12018,"baseId":12018,"name":"Salve amulet(ei)","version":"","slot":"neck","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
-{"id":4081,"baseId":4081,"name":"Salve amulet","version":"","slot":"neck","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3}
+{"id":4081,"baseId":4081,"name":"Salve amulet","version":"","slot":"neck","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":3},
+{"id":21012,"baseId":21012,"name":"Dragon hunter crossbow","version":"","slot":"weapon","category":"Crossbow","twoHanded":false,"speed":6,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":95,"prayer":0}
 ]

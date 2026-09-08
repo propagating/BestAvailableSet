@@ -80,14 +80,32 @@ public class SituationalItemBuildTest
 	@Test
 	public void weaponRowsOnlyApplyWhenTheWeaponCanUseTheAttackType()
 	{
-		// the lance has no ranged style
+		// the lance has no ranged style, but the crossbow (also a "vs dragon" prefix) does
 		List<Loadout> loadouts = builder.build(everything, AttackType.RANGED, monsters.byId(8058).get(), 99,
 			BuildOptions.defaults());
-		assertFalse(withReason(loadouts, "vs dragon").isPresent());
+		Loadout ranged = withReason(loadouts, "vs dragon").get();
+		assertEquals("Dragon hunter crossbow", ranged.weapon().getName());
 		// the crush style (Pound) exists, so the lance appears for crush
 		List<Loadout> crush = builder.build(everything, AttackType.CRUSH, monsters.byId(8058).get(), 99,
 			BuildOptions.defaults());
 		assertTrue(withReason(crush, "vs dragon").isPresent());
+	}
+
+	@Test
+	public void laterPrefixIsUsedWhenTheFirstOwnedItemCannotUseTheType()
+	{
+		// the lance is preferred but has no ranged style, so the build falls through to the
+		// crossbow rather than skipping the "vs dragon" row entirely
+		List<Loadout> ranged = builder.build(everything, AttackType.RANGED, monsters.byId(8058).get(), 99,
+			BuildOptions.defaults());
+		Loadout crossbow = withReason(ranged, "vs dragon").get();
+		assertEquals("Dragon hunter crossbow", crossbow.weapon().getName());
+		assertEquals("Ruby dragon bolts (e)", crossbow.getEquipment().get("ammo").getName());
+
+		List<Loadout> stab = builder.build(everything, AttackType.STAB, monsters.byId(8058).get(), 99,
+			BuildOptions.defaults());
+		Loadout lance = withReason(stab, "vs dragon").get();
+		assertEquals("Dragon hunter lance", lance.weapon().getName());
 	}
 
 	@Test

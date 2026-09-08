@@ -177,14 +177,26 @@ public class LoadoutBuilder
 			// but cannot autocast a spell, so they are excluded from the elemental split here;
 			// they still appear in the single-group path above when there is no weakness.
 		}
-		int half = limit / 2;
-		int casterCount = Math.min(casters.size(), Math.max(half, limit - powered.size()));
-		int poweredCount = Math.min(powered.size(), limit - casterCount);
+		// sized against MAX_LOADOUTS, not `limit`, so the first six are always the same
+		// regardless of how many extra slots the caller asked for beyond them
+		int half = MAX_LOADOUTS / 2;
+		int casterCount = Math.min(casters.size(), Math.max(half, MAX_LOADOUTS - powered.size()));
+		int poweredCount = Math.min(powered.size(), MAX_LOADOUTS - casterCount);
 		for (int i = 0; i < casterCount; i++)
 		{
 			out.add(loadout(casters.get(i), type, filler, element.get(), spell.get()));
 		}
 		for (int i = 0; i < poweredCount; i++)
+		{
+			out.add(loadout(powered.get(i), type, filler, null, null));
+		}
+		// beyond the stable first six: remaining casters, then remaining powered staves, in
+		// rank order, so a large `limit` does not crowd every powered staff out
+		for (int i = casterCount; i < casters.size() && out.size() < limit; i++)
+		{
+			out.add(loadout(casters.get(i), type, filler, element.get(), spell.get()));
+		}
+		for (int i = poweredCount; i < powered.size() && out.size() < limit; i++)
 		{
 			out.add(loadout(powered.get(i), type, filler, null, null));
 		}

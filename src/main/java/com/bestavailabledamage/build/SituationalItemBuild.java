@@ -52,17 +52,35 @@ public class SituationalItemBuild implements GuaranteedBuild
 			{
 				continue;
 			}
-			EquipmentEntry item = row.bestOwned(ctx.getFiller(), ctx.getType());
-			if (item == null)
+			List<EquipmentEntry> candidates = row.bestPerPrefix(ctx.getFiller(), ctx.getType());
+			if (candidates.isEmpty())
 			{
 				continue;
 			}
 			Optional<Loadout> built = row.getSlot().equals("weapon")
-				? ctx.getBuilder().loadoutFor(item, ctx)
-				: Optional.of(swap(ctx.topPlain(), row.getSlot(), item));
+				? firstUsableWeapon(candidates, ctx)
+				: Optional.of(swap(ctx.topPlain(), row.getSlot(), candidates.get(0)));
 			built.ifPresent(l -> out.add(l.guaranteed(row.getReason())));
 		}
 		return out;
+	}
+
+	/**
+	 * The first candidate, in preference order, whose weapon style fits the attack type: a
+	 * more preferred item (e.g. a Dragon hunter lance) can lack a style for this type, in
+	 * which case the next-preferred owned item (e.g. the crossbow) is tried instead.
+	 */
+	private static Optional<Loadout> firstUsableWeapon(List<EquipmentEntry> candidates, BuildContext ctx)
+	{
+		for (EquipmentEntry item : candidates)
+		{
+			Optional<Loadout> built = ctx.getBuilder().loadoutFor(item, ctx);
+			if (built.isPresent())
+			{
+				return built;
+			}
+		}
+		return Optional.empty();
 	}
 
 	private static Loadout swap(Loadout base, String slot, EquipmentEntry item)

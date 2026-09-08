@@ -47,7 +47,7 @@ public final class SituationalItems
 		new SituationalItem("vs dragon", "weapon",
 			List.of("dragon hunter lance", "dragon hunter crossbow", "dragon hunter wand"), attribute("dragon")),
 		new SituationalItem("vs kalphite", "weapon", List.of("keris"), attribute("kalphite")),
-		new SituationalItem("vs demon", "weapon", List.of("arclight", "emberlight"), attribute("demon")),
+		new SituationalItem("vs demon", "weapon", List.of("emberlight", "arclight"), attribute("demon")),
 		new SituationalItem("vs high magic level", "weapon", List.of("twisted bow"),
 			m -> m.getMagicLevel() >= TWISTED_BOW_MAGIC_LEVEL)
 	);

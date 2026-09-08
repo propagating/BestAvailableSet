@@ -27,6 +27,7 @@ package com.bestavailabledamage.build;
 import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentEntry;
 import com.bestavailabledamage.data.MonsterEntry;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
@@ -59,21 +60,25 @@ public class SituationalItem
 	}
 
 	/**
-	 * The best owned item for this row, honouring {@code namePrefixes} as a preference order:
-	 * the first prefix with any owned match wins, even if a later prefix's match would rank
-	 * higher on stats alone. Null when nothing owned matches any prefix.
+	 * The best owned item for each prefix that has one, in {@code namePrefixes} preference
+	 * order (a prefix with no owned match is skipped, not left as a hole). A weapon row can
+	 * have several usable prefixes: the caller tries each in turn since the first, most
+	 * preferred one is not guaranteed to fit the attack type (e.g. a Dragon hunter lance has
+	 * no ranged style, so a ranged build must fall through to the crossbow). Empty when
+	 * nothing owned matches any prefix.
 	 */
-	public EquipmentEntry bestOwned(SlotFiller filler, AttackType type)
+	public List<EquipmentEntry> bestPerPrefix(SlotFiller filler, AttackType type)
 	{
+		List<EquipmentEntry> items = new ArrayList<>();
 		for (String prefix : namePrefixes)
 		{
 			EquipmentEntry item = filler.best(type, e -> e.getSlot().equals(slot)
 				&& e.getName().toLowerCase(Locale.ROOT).startsWith(prefix));
 			if (item != null)
 			{
-				return item;
+				items.add(item);
 			}
 		}
-		return null;
+		return items;
 	}
 }

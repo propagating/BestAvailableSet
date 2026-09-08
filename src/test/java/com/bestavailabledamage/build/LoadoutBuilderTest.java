@@ -239,4 +239,38 @@ public class LoadoutBuilderTest
 		List<Loadout> noWeakness = builderWithSalamander.build(owned, AttackType.MAGIC, abyssalDemon, 99);
 		assertTrue(weaponNames(noWeakness).stream().anyMatch(n -> n.equals("Test Salamander")));
 	}
+
+	@Test
+	public void plainLoadoutsBeyondSixKeepTheFirstSixUnchanged()
+	{
+		// three extra castable staves ranking between the Kodai wand and the Nightmare staff,
+		// and three extra powered staves ranking above the Sanguinesti staff
+		List<EquipmentEntry> withExtras = new ArrayList<>(catalog.all());
+		withExtras.add(new EquipmentEntry(90301, 90301, "Test Staff 1", null, "weapon", "Staff",
+			false, 4, 0, 0, 140, 0, 0, 0, 20, 0, 0));
+		withExtras.add(new EquipmentEntry(90302, 90302, "Test Staff 2", null, "weapon", "Staff",
+			false, 4, 0, 0, 130, 0, 0, 0, 20, 0, 0));
+		withExtras.add(new EquipmentEntry(90303, 90303, "Test Staff 3", null, "weapon", "Staff",
+			false, 4, 0, 0, 120, 0, 0, 0, 20, 0, 0));
+		withExtras.add(new EquipmentEntry(90311, 90311, "Test Powered Staff 1", null, "weapon", "Powered Staff",
+			false, 4, 0, 0, 0, 0, 0, 0, 30, 0, 0));
+		withExtras.add(new EquipmentEntry(90312, 90312, "Test Powered Staff 2", null, "weapon", "Powered Staff",
+			false, 4, 0, 0, 0, 0, 0, 0, 29, 0, 0));
+		withExtras.add(new EquipmentEntry(90313, 90313, "Test Powered Staff 3", null, "weapon", "Powered Staff",
+			false, 4, 0, 0, 0, 0, 0, 0, 28, 0, 0));
+		EquipmentCatalog augmented = new EquipmentCatalog(withExtras);
+		LoadoutBuilder builderWithExtras = new LoadoutBuilder(augmented, spells, new SpeedAdjustedRanker());
+
+		List<Loadout> six = builderWithExtras.plainLoadouts(withExtras, AttackType.MAGIC, vorkath, 99, 6);
+		List<Loadout> nine = builderWithExtras.plainLoadouts(withExtras, AttackType.MAGIC, vorkath, 99, 9);
+
+		assertEquals(6, six.size());
+		assertEquals(9, nine.size());
+		assertEquals(weaponNames(six), weaponNames(nine).subList(0, 6));
+
+		long poweredInNine = nine.stream()
+			.filter(l -> l.weapon().getCategory().equalsIgnoreCase("Powered Staff"))
+			.count();
+		assertTrue(poweredInNine >= 3);
+	}
 }
