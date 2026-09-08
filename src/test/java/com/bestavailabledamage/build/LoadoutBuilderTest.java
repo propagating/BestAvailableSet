@@ -85,8 +85,35 @@ public class LoadoutBuilderTest
 		assertEquals("Ferocious gloves", rapier.getEquipment().get("hands").getName());
 		assertEquals("Primordial boots", rapier.getEquipment().get("feet").getName());
 		assertEquals("Ultor ring", rapier.getEquipment().get("ring").getName());
-		assertNull(rapier.getEquipment().get("ammo"));
+		// a weapon that fires nothing still wears the best owned blessing
+		assertEquals("Rada's blessing 4", rapier.getEquipment().get("ammo").getName());
 		assertNull(rapier.getSpell());
+	}
+
+	@Test
+	public void unarmedAndZeroSpeedWeaponsAreNeverLoadouts()
+	{
+		for (AttackType type : AttackType.values())
+		{
+			List<Loadout> loadouts = builder.build(everything(catalog), type, abyssalDemon, 99);
+			assertTrue(type + " picked a greegree",
+				weaponNames(loadouts).stream().noneMatch(n -> n.contains("greegree")));
+		}
+		Set<Integer> onlyGreegree = new HashSet<>(Set.of(4026, 26382));
+		assertTrue(builder.build(onlyGreegree, AttackType.CRUSH, abyssalDemon, 99).isEmpty());
+	}
+
+	@Test
+	public void ammolessBowsWearABlessingInsteadOfArrows()
+	{
+		List<Loadout> loadouts = builder.build(everything(catalog), AttackType.RANGED, abyssalDemon, 99);
+		Loadout bofa = loadouts.stream().filter(l -> l.weapon().getId() == 25865).findFirst().get();
+		assertEquals("Rada's blessing 4", bofa.getEquipment().get("ammo").getName());
+		Loadout crystal = loadouts.stream().filter(l -> l.weapon().getId() == 23983).findFirst().get();
+		assertEquals("Rada's blessing 4", crystal.getEquipment().get("ammo").getName());
+		// a bow that does fire arrows is unchanged
+		Loadout msb = loadouts.stream().filter(l -> l.weapon().getId() == 861).findFirst().get();
+		assertEquals("Dragon arrow", msb.getEquipment().get("ammo").getName());
 	}
 
 	@Test
@@ -121,7 +148,7 @@ public class LoadoutBuilderTest
 		assertEquals("Elysian spirit shield", acb.getEquipment().get("shield").getName());
 
 		Loadout blowpipe = loadouts.stream().filter(l -> l.weapon().getId() == 12926).findFirst().get();
-		assertNull(blowpipe.getEquipment().get("ammo"));
+		assertEquals("Rada's blessing 4", blowpipe.getEquipment().get("ammo").getName());
 		assertEquals("Dragon dart", blowpipe.getBlowpipeDart().getName());
 		assertEquals("Masori body (f)", blowpipe.getEquipment().get("body").getName());
 		assertEquals("Rapid", blowpipe.getStyle().getStance());
@@ -198,7 +225,7 @@ public class LoadoutBuilderTest
 		// a Salamander offers a Magic style (Blaze) but cannot autocast a spell; it must not
 		// be treated as an elemental caster even though it ranks above the real staves here.
 		EquipmentEntry salamander = new EquipmentEntry(90210, 90210, "Test Salamander", null,
-			"weapon", "Salamander", true, 1, 0, 0, 200, 0, 0, 0, 90, 0);
+			"weapon", "Salamander", true, 1, 0, 0, 200, 0, 0, 0, 90, 0, 0);
 		List<EquipmentEntry> withSalamander = new ArrayList<>(catalog.all());
 		withSalamander.add(salamander);
 		EquipmentCatalog augmented = new EquipmentCatalog(withSalamander);

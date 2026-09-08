@@ -16,7 +16,10 @@ real damage numbers are computed.
   by `(strength bonus + 64) / attack speed` and gives each of the top six its
   own loadout, filling the other slots with your best item by strength then
   accuracy. Two-handed weapons empty the shield slot; bows get your best
-  arrows, crossbows your best bolts, a blowpipe your best darts.
+  arrows, crossbows your best bolts, a blowpipe your best darts. Any weapon
+  that fires nothing (including the crystal bow and bow of Faerdhinen) wears
+  your best blessing in the ammo slot instead. Items that cannot attack, such
+  as greegrees, are never chosen as weapons.
 - For magic against a target with an element weakness, at least three
   loadouts use your non-powered staves with the strongest standard-spellbook
   spell of that element you can cast (and a matching tome if you own one),

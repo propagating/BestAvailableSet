@@ -46,6 +46,7 @@ public class EquipmentEntry
 	int crush;
 	int magic;
 	int ranged;
+	int prayer;
 
 	public String displayName()
 	{

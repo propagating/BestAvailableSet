@@ -129,6 +129,15 @@ public class LoadoutBuilder
 		return c.equalsIgnoreCase("Staff") || c.equalsIgnoreCase("Bladed Staff");
 	}
 
+	/**
+	 * Weapon-slot items that cannot attack: the calculator's list carries every equippable
+	 * item (greegrees, tools, cosmetics) under "Unarmed" with a speed of 0 or -1.
+	 */
+	static boolean cannotAttack(EquipmentEntry weapon)
+	{
+		return weapon.getCategory().equalsIgnoreCase("Unarmed") || weapon.getSpeed() < 1;
+	}
+
 	/** Owned weapons that can attack with the type, best first, one per base item, no darts. */
 	private List<EquipmentEntry> rankedWeapons(List<EquipmentEntry> owned, AttackType type)
 	{
@@ -138,7 +147,7 @@ public class LoadoutBuilder
 			.thenComparing(SlotFiller.preference(type));
 		for (EquipmentEntry w : owned)
 		{
-			if (!w.getSlot().equals("weapon") || SlotFiller.isDart(w)
+			if (!w.getSlot().equals("weapon") || SlotFiller.isDart(w) || cannotAttack(w)
 				|| !WeaponStyles.bestStyleFor(w.getCategory(), type).isPresent())
 			{
 				continue;

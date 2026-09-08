@@ -47,7 +47,8 @@ public class EquipmentCatalogTest
 	public void loadsRowsAndLooksUpById()
 	{
 		EquipmentCatalog catalog = fixture();
-		assertEquals(43, catalog.size());
+		assertEquals(48, catalog.size());
+		assertEquals(2, catalog.byId(22947).get().getPrayer());
 		EquipmentEntry rapier = catalog.byId(22324).get();
 		assertEquals("Ghrazi rapier", rapier.getName());
 		assertEquals("Stab Sword", rapier.getCategory());

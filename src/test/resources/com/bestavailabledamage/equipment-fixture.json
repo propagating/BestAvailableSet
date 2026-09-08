@@ -41,5 +41,10 @@
 {"id":13239,"baseId":13239,"name":"Primordial boots","version":"","slot":"feet","category":"","twoHanded":false,"speed":0,"str":5,"rangedStr":0,"magicStr":0,"stab":2,"slash":2,"crush":2,"magic":-4,"ranged":-1},
 {"id":13237,"baseId":13237,"name":"Pegasian boots","version":"","slot":"feet","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":1,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":-12,"ranged":12},
 {"id":28307,"baseId":28307,"name":"Ultor ring","version":"","slot":"ring","category":"","twoHanded":false,"speed":0,"str":12,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0},
-{"id":28313,"baseId":28313,"name":"Magus ring","version":"","slot":"ring","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":20,"stab":0,"slash":0,"crush":0,"magic":15,"ranged":0}
+{"id":28313,"baseId":28313,"name":"Magus ring","version":"","slot":"ring","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":20,"stab":0,"slash":0,"crush":0,"magic":15,"ranged":0},
+{"id":4026,"baseId":4026,"name":"Gorilla greegree","version":"","slot":"weapon","category":"Unarmed","twoHanded":false,"speed":-1,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":0},
+{"id":23983,"baseId":23983,"name":"Crystal bow","version":"Active","slot":"weapon","category":"Bow","twoHanded":true,"speed":5,"str":0,"rangedStr":78,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":100,"prayer":0},
+{"id":25865,"baseId":25865,"name":"Bow of Faerdhinen","version":"Charged","slot":"weapon","category":"Bow","twoHanded":true,"speed":5,"str":0,"rangedStr":106,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":128,"prayer":0},
+{"id":22947,"baseId":22947,"name":"Rada's blessing 4","version":"","slot":"ammo","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":2},
+{"id":20220,"baseId":20220,"name":"Holy blessing","version":"","slot":"ammo","category":"","twoHanded":false,"speed":0,"str":0,"rangedStr":0,"magicStr":0,"stab":0,"slash":0,"crush":0,"magic":0,"ranged":0,"prayer":1}
 ]

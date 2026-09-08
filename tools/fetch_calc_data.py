@@ -60,6 +60,7 @@ def trim_equipment(raw, aliases):
             "crush": int(offensive["crush"]),
             "magic": int(offensive["magic"]),
             "ranged": int(offensive["ranged"]),
+            "prayer": int(bonuses.get("prayer") or 0),
         })
     return out
 

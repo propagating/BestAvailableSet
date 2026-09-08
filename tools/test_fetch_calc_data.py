@@ -29,9 +29,18 @@ class TrimEquipmentTest(unittest.TestCase):
         self.assertEqual(out[0]["twoHanded"], False)
         self.assertEqual(out[0]["str"], 8)
         self.assertEqual(out[0]["stab"], 30)
+        self.assertEqual(out[0]["prayer"], 0)
         self.assertEqual(set(out[0]), {"id", "baseId", "name", "version", "slot", "category",
                                        "twoHanded", "speed", "str", "rangedStr", "magicStr",
-                                       "stab", "slash", "crush", "magic", "ranged"})
+                                       "stab", "slash", "crush", "magic", "ranged", "prayer"})
+
+    def test_prayer_bonus_is_kept(self):
+        raw = [{"name": "Rada's blessing 4", "id": 22947, "version": "", "slot": "ammo",
+                "category": "", "speed": 0, "isTwoHanded": False,
+                "bonuses": {"str": 0, "ranged_str": 0, "magic_str": 0, "prayer": 2},
+                "offensive": {"stab": 0, "slash": 0, "crush": 0, "magic": 0, "ranged": 0},
+                "defensive": {}}]
+        self.assertEqual(f.trim_equipment(raw, {})[0]["prayer"], 2)
 
 
 class TrimMonstersTest(unittest.TestCase):

@@ -99,36 +99,47 @@ public class SlotFiller
 			&& e.getName().toLowerCase(Locale.ROOT).endsWith("dart");
 	}
 
+	/**
+	 * Arrows for bows, bolts for crossbows, otherwise the best owned blessing: a weapon that
+	 * fires nothing (melee, magic, thrown, and the crystal bows, which draw their own ammo)
+	 * leaves the ammo slot free for a prayer bonus.
+	 */
 	private EquipmentEntry ammoFor(EquipmentEntry weapon, AttackType type)
 	{
-		if (type != AttackType.RANGED)
-		{
-			return null;
-		}
 		String category = weapon.getCategory();
-		if (category.equalsIgnoreCase("Bow"))
+		if (type == AttackType.RANGED && category.equalsIgnoreCase("Bow") && !isAmmolessBow(weapon))
 		{
 			return best(type, e -> e.getSlot().equals("ammo")
 				&& e.getName().toLowerCase(Locale.ROOT).matches(".*arrows?$"));
 		}
-		if (category.equalsIgnoreCase("Crossbow"))
+		if (type == AttackType.RANGED && category.equalsIgnoreCase("Crossbow"))
 		{
 			return best(type, e -> e.getSlot().equals("ammo")
 				&& e.getName().toLowerCase(Locale.ROOT).contains("bolt"));
 		}
-		return null;
+		return best(type, e -> e.getSlot().equals("ammo")
+			&& e.getName().toLowerCase(Locale.ROOT).contains("blessing"));
+	}
+
+	/** Bows that need no ammunition: the crystal bow and the bow of Faerdhinen in every form. */
+	static boolean isAmmolessBow(EquipmentEntry weapon)
+	{
+		String name = weapon.getName().toLowerCase(Locale.ROOT);
+		return name.startsWith("crystal bow") || name.startsWith("bow of faerdhinen");
 	}
 
 	/**
-	 * Highest strength for the type, then highest accuracy, then alphabetical name, then the
-	 * base item over an alias (so "Avernic defender" beats "Avernic defender (Locked)"), then
-	 * the lower id. The order is total so results are deterministic.
+	 * Highest strength for the type, then highest accuracy, then highest prayer bonus (which
+	 * decides between items with no offensive stats, such as blessings), then alphabetical
+	 * name, then the base item over an alias (so "Avernic defender" beats "Avernic defender
+	 * (Locked)"), then the lower id. The order is total so results are deterministic.
 	 */
 	static Comparator<EquipmentEntry> preference(AttackType type)
 	{
 		return Comparator
 			.comparingInt((EquipmentEntry e) -> type.strengthOf(e))
 			.thenComparingInt(type::accuracyOf)
+			.thenComparingInt(EquipmentEntry::getPrayer)
 			.thenComparing(EquipmentEntry::getName, Comparator.reverseOrder())
 			.thenComparingInt(e -> e.getId() == e.getBaseId() ? 1 : 0)
 			.thenComparing(Comparator.comparingInt(EquipmentEntry::getId).reversed());
