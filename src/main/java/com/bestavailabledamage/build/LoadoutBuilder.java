@@ -72,7 +72,7 @@ public class LoadoutBuilder
 	/** The shipped rules, in the order their builds appear: situational, slayer, Void, budget. */
 	public static List<GuaranteedBuild> standardBuilds()
 	{
-		return List.of(new SlayerHelmBuild());
+		return List.of(new SlayerHelmBuild(), new VoidBuild());
 	}
 
 	/** Plain ranked builds only; registered guaranteed builds are not consulted at all. */
