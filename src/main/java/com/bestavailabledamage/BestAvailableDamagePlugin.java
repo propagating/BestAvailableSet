@@ -69,6 +69,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -79,6 +80,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.LinkBrowser;
 import okhttp3.OkHttpClient;
@@ -93,6 +95,9 @@ public class BestAvailableDamagePlugin extends Plugin
 {
 	private static final String RESOURCE_PREFIX = "/com/bestavailabledamage/";
 	private static final long SAVE_DEBOUNCE_MILLIS = 2_000L;
+	// item sprites are 36x32; the sidebar draws icons at roughly this size
+	private static final int ICON_WIDTH = 18;
+	private static final int ICON_HEIGHT = 16;
 
 	@Inject
 	private Client client;
@@ -149,14 +154,12 @@ public class BestAvailableDamagePlugin extends Plugin
 		payload = new SharePayload(gson);
 
 		panel = new BestAvailableDamagePanel(new PanelActions());
-		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "panel_icon.png");
-		navButton = NavigationButton.builder()
-			.tooltip("Best Available Damage")
-			.icon(icon)
-			.priority(8)
-			.panel(panel)
-			.build();
+		// the bundled icon shows immediately; the Void ranger helm sprite from the game cache
+		// replaces it as soon as it has loaded
+		navButton = navigationButton(ImageUtil.loadImageResource(getClass(), "panel_icon.png"));
 		clientToolbar.addNavigation(navButton);
+		final AsyncBufferedImage sprite = itemManager.getImage(ItemID.GAME_PEST_ARCHER_HELM);
+		sprite.onLoaded(() -> SwingUtilities.invokeLater(() -> useIcon(sprite)));
 
 		final BestAvailableDamagePanel p = panel;
 		executor.execute(() -> loadCatalogs(p));
@@ -207,6 +210,28 @@ public class BestAvailableDamagePlugin extends Plugin
 		lastProfile = null;
 		observer = null;
 		store = null;
+	}
+
+	private NavigationButton navigationButton(BufferedImage icon)
+	{
+		return NavigationButton.builder()
+			.tooltip("Best Available Damage")
+			.icon(icon)
+			.priority(8)
+			.panel(panel)
+			.build();
+	}
+
+	/** EDT. Rebuilds the sidebar button with the item sprite, scaled to the sidebar's icon size. */
+	private void useIcon(BufferedImage sprite)
+	{
+		if (navButton == null || panel == null)
+		{
+			return;
+		}
+		clientToolbar.removeNavigation(navButton);
+		navButton = navigationButton(ImageUtil.resizeImage(sprite, ICON_WIDTH, ICON_HEIGHT));
+		clientToolbar.addNavigation(navButton);
 	}
 
 	private void loadCatalogs(BestAvailableDamagePanel target)
