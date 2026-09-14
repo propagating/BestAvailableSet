@@ -88,7 +88,7 @@ public class SharePayloadTest
 			.magic(94).prayer(77).hitpoints(99).mining(85).herblore(80)
 			.rigourUnlocked(true).auguryUnlocked(true).build();
 
-		String json = new SharePayload(new Gson()).toJson(List.of(rapier, blowpipe, slayer), vorkath, profile, AttackType.STAB);
+		String json = new SharePayload(new Gson()).toJson(List.of(rapier, blowpipe, slayer), vorkath, profile);
 
 		JsonParser parser = new JsonParser();
 		JsonElement expected = parser.parse(new InputStreamReader(

@@ -26,7 +26,6 @@ package com.bestavailabledamage.export;
 
 import com.bestavailabledamage.build.Loadout;
 import com.bestavailabledamage.build.LoadoutBuilder;
-import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.EquipmentEntry;
 import com.bestavailabledamage.data.MonsterEntry;
 import com.bestavailabledamage.player.PlayerProfile;
@@ -56,15 +55,17 @@ public class SharePayload
 		this.gson = gson.newBuilder().serializeNulls().create();
 	}
 
-	public String toJson(List<Loadout> loadouts, MonsterEntry target, PlayerProfile profile, AttackType type)
+	public String toJson(List<Loadout> loadouts, MonsterEntry target, PlayerProfile profile)
 	{
 		JsonObject root = new JsonObject();
 		root.addProperty("serializationVersion", SERIALIZATION_VERSION);
 		root.addProperty("selectedLoadout", 0);
 		JsonArray array = new JsonArray();
-		List<Integer> prayers = PrayerChooser.forType(type, profile);
 		for (Loadout loadout : loadouts)
 		{
+			// each loadout gets the best prayer for its own style, so a mixed-style comparison
+			// exports Piety, Rigour and Augury side by side
+			List<Integer> prayers = PrayerChooser.forType(loadout.getStyle().getType(), profile);
 			array.add(loadout(loadout, profile, prayers));
 		}
 		root.add("loadouts", array);

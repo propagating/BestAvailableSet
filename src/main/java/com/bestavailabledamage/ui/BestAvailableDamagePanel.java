@@ -25,9 +25,9 @@
 package com.bestavailabledamage.ui;
 
 import com.bestavailabledamage.build.Loadout;
-import com.bestavailabledamage.data.AttackType;
 import com.bestavailabledamage.data.MonsterCatalog;
 import com.bestavailabledamage.data.MonsterEntry;
+import com.bestavailabledamage.data.StyleChoice;
 import com.bestavailabledamage.storage.StorageType;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -62,9 +62,9 @@ public class BestAvailableDamagePanel extends PluginPanel
 	/** What the panel needs from the plugin. Every callback is invoked on the EDT. */
 	public interface Actions
 	{
-		void build(AttackType type, MonsterEntry target, Consumer<List<Loadout>> onBuilt, Consumer<String> onStatus);
+		void build(StyleChoice choice, MonsterEntry target, Consumer<List<Loadout>> onBuilt, Consumer<String> onStatus);
 
-		void export(List<Loadout> loadouts, AttackType type, MonsterEntry target, Consumer<String> onStatus);
+		void export(List<Loadout> loadouts, MonsterEntry target, Consumer<String> onStatus);
 
 		boolean exportEnabled();
 	}
@@ -74,7 +74,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 
 	private final Actions actions;
 	private final StorageHeader header = new StorageHeader();
-	private final JComboBox<AttackType> attackType = new JComboBox<>(AttackType.values());
+	private final JComboBox<StyleChoice> attackType = new JComboBox<>(StyleChoice.values());
 	private final JTextField search = new JTextField();
 	private final DefaultListModel<MonsterEntry> resultsModel = new DefaultListModel<>();
 	private final JList<MonsterEntry> results = new JList<>(resultsModel);
@@ -91,9 +91,9 @@ public class BestAvailableDamagePanel extends PluginPanel
 	private MonsterCatalog monsters;
 	private MonsterEntry selected;
 	private List<Loadout> loadouts = Collections.emptyList();
-	// the attack type and target the current `loadouts` were built for; null when there is
+	// the style choice and target the current `loadouts` were built for; null when there is
 	// nothing built (or it has been invalidated by a combo/selection change since the build)
-	private AttackType builtType;
+	private StyleChoice builtType;
 	private MonsterEntry builtTarget;
 
 	// EDT-only re-entrancy guards: the panel's methods and every Actions callback run on
@@ -128,7 +128,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 				boolean isSelected, boolean cellHasFocus)
 			{
 				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				setText(capitalise(((AttackType) value).calcName()));
+				setText(((StyleChoice) value).label());
 				return this;
 			}
 		});
@@ -357,7 +357,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 		}
 		building = true;
 		updateBuildEnabled();
-		final AttackType type = (AttackType) attackType.getSelectedItem();
+		final StyleChoice type = (StyleChoice) attackType.getSelectedItem();
 		final MonsterEntry buildTarget = selected;
 		status.setText("Building...");
 		actions.build(type, buildTarget, built ->
@@ -369,7 +369,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 			cards.removeAll();
 			if (built.isEmpty())
 			{
-				JLabel none = new JLabel("No " + type.calcName() + " weapon found in your storage");
+				JLabel none = new JLabel("No " + type.weaponDescription() + " found in your storage");
 				none.setFont(FontManager.getRunescapeSmallFont());
 				none.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 				cards.add(none);
@@ -384,7 +384,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 			if (built.isEmpty())
 			{
 				status.setText(exportAfterBuild
-					? "Nothing to export: no " + type.calcName() + " weapon found in your storage"
+					? "Nothing to export: no " + type.weaponDescription() + " found in your storage"
 					: " ");
 			}
 			else
@@ -430,9 +430,8 @@ public class BestAvailableDamagePanel extends PluginPanel
 		exporting = true;
 		refreshExportState();
 		status.setText("Creating share link...");
-		final AttackType exportType = builtType;
 		final MonsterEntry exportTarget = builtTarget;
-		actions.export(new ArrayList<>(loadouts), exportType, exportTarget, message ->
+		actions.export(new ArrayList<>(loadouts), exportTarget, message ->
 		{
 			exporting = false;
 			status.setText(message);

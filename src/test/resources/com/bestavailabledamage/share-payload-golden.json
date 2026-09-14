@@ -26,7 +26,7 @@
       "name": "Toxic blowpipe",
       "style": {"name": "Rapid", "type": "ranged", "stance": "Rapid"},
       "skills": {"atk": 99, "str": 99, "def": 90, "ranged": 95, "magic": 94, "prayer": 77, "hp": 99, "mining": 85, "herblore": 80},
-      "prayers": [13],
+      "prayers": [14],
       "equipment": {
         "head": null,
         "cape": null,

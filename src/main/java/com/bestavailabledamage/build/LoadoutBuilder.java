@@ -34,6 +34,7 @@ import com.bestavailabledamage.data.SpellEntry;
 import com.bestavailabledamage.data.WeaponStyles;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +132,87 @@ public class LoadoutBuilder
 			}
 		}
 		return out;
+	}
+
+	/**
+	 * "Compare styles": one card per attack type (stab, slash, crush, ranged, magic, in that
+	 * order) taken from each type's own {@link #build} result, then the remaining slots up to
+	 * six from the types' second, third... cards, starting with the melee type whose top
+	 * ranked weapon scores highest, then ranged, then magic. A card with the same gear and the
+	 * same style type as an earlier one is skipped; the same gear in a different style is a
+	 * legitimate comparison and stays.
+	 */
+	public List<Loadout> buildComparison(Set<Integer> ownedIds, MonsterEntry target, int magicLevel, BuildOptions options)
+	{
+		Map<AttackType, List<Loadout>> perType = new EnumMap<>(AttackType.class);
+		for (AttackType type : AttackType.values())
+		{
+			perType.put(type, build(ownedIds, type, target, magicLevel, options));
+		}
+		List<Loadout> out = new ArrayList<>();
+		for (AttackType type : AttackType.values())
+		{
+			List<Loadout> cards = perType.get(type);
+			if (!cards.isEmpty())
+			{
+				addUnique(out, cards.get(0));
+			}
+		}
+		List<AttackType> fillOrder = fillOrder(ownedIds, target, magicLevel);
+		for (int index = 1; out.size() < MAX_LOADOUTS; index++)
+		{
+			boolean anyCard = false;
+			for (AttackType type : fillOrder)
+			{
+				List<Loadout> cards = perType.get(type);
+				if (index < cards.size())
+				{
+					anyCard = true;
+					addUnique(out, cards.get(index));
+					if (out.size() >= MAX_LOADOUTS)
+					{
+						break;
+					}
+				}
+			}
+			if (!anyCard)
+			{
+				break;
+			}
+		}
+		return out;
+	}
+
+	/** Melee types by the score of their top ranked weapon, best first, then ranged, then magic. */
+	private List<AttackType> fillOrder(Set<Integer> ownedIds, MonsterEntry target, int magicLevel)
+	{
+		List<EquipmentEntry> owned = new ArrayList<>();
+		for (Integer id : ownedIds)
+		{
+			catalog.byId(id).ifPresent(owned::add);
+		}
+		List<AttackType> melee = new ArrayList<>(List.of(AttackType.STAB, AttackType.SLASH, AttackType.CRUSH));
+		melee.sort(Comparator.comparingDouble((AttackType type) ->
+		{
+			List<Loadout> plain = plainLoadouts(owned, type, target, magicLevel);
+			return plain.isEmpty() ? Double.NEGATIVE_INFINITY : ranker.score(plain.get(0).weapon(), type);
+		}).reversed());
+		List<AttackType> order = new ArrayList<>(melee);
+		order.add(AttackType.RANGED);
+		order.add(AttackType.MAGIC);
+		return order;
+	}
+
+	private static void addUnique(List<Loadout> out, Loadout card)
+	{
+		for (Loadout existing : out)
+		{
+			if (existing.sameGearAs(card) && existing.getStyle().getType() == card.getStyle().getType())
+			{
+				return;
+			}
+		}
+		out.add(card);
 	}
 
 	/** The v1 algorithm: ranked weapons, one loadout each, magic split by element weakness. */

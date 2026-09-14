@@ -63,6 +63,11 @@ public class LoadoutCard extends JPanel
 
 		JPanel rows = new JPanel(new GridLayout(0, 1, 0, 1));
 		rows.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		JLabel styleRow = new JLabel("Style: " + loadout.getStyle().getName()
+			+ " (" + loadout.getStyle().getType().calcName() + ")");
+		styleRow.setFont(FontManager.getRunescapeSmallFont());
+		styleRow.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		rows.add(styleRow);
 		for (String slot : LoadoutBuilder.SLOTS)
 		{
 			EquipmentEntry entry = loadout.getEquipment().get(slot);

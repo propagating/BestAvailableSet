@@ -28,7 +28,7 @@ import com.bestavailabledamage.build.BuildOptions;
 import com.bestavailabledamage.build.Loadout;
 import com.bestavailabledamage.build.LoadoutBuilder;
 import com.bestavailabledamage.build.SpeedAdjustedRanker;
-import com.bestavailabledamage.data.AttackType;
+import com.bestavailabledamage.data.StyleChoice;
 import com.bestavailabledamage.data.EquipmentCatalog;
 import com.bestavailabledamage.data.MonsterCatalog;
 import com.bestavailabledamage.data.MonsterEntry;
@@ -388,7 +388,7 @@ public class BestAvailableDamagePlugin extends Plugin
 	private class PanelActions implements BestAvailableDamagePanel.Actions
 	{
 		@Override
-		public void build(AttackType type, MonsterEntry target, Consumer<List<Loadout>> onBuilt, Consumer<String> onStatus)
+		public void build(StyleChoice choice, MonsterEntry target, Consumer<List<Loadout>> onBuilt, Consumer<String> onStatus)
 		{
 			final LoadoutBuilder b = builder;
 			if (b == null)
@@ -417,7 +417,9 @@ public class BestAvailableDamagePlugin extends Plugin
 						.itemPrice(itemManager::getItemPrice)
 						.onSlayerTask(profile.slayerTaskMatches(target))
 						.build();
-					List<Loadout> built = b.build(ids, type, target, profile.getMagic(), options);
+					List<Loadout> built = choice.attackType().isPresent()
+						? b.build(ids, choice.attackType().get(), target, profile.getMagic(), options)
+						: b.buildComparison(ids, target, profile.getMagic(), options);
 					SwingUtilities.invokeLater(() -> onBuilt.accept(built));
 				}
 				catch (RuntimeException e)
@@ -429,7 +431,7 @@ public class BestAvailableDamagePlugin extends Plugin
 		}
 
 		@Override
-		public void export(List<Loadout> loadouts, AttackType type, MonsterEntry target, Consumer<String> onStatus)
+		public void export(List<Loadout> loadouts, MonsterEntry target, Consumer<String> onStatus)
 		{
 			PlayerProfile profile = lastProfile;
 			if (!config.exportToWikiCalc())
@@ -444,7 +446,7 @@ public class BestAvailableDamagePlugin extends Plugin
 			}
 			try
 			{
-				String json = payload.toJson(loadouts, target, profile, type);
+				String json = payload.toJson(loadouts, target, profile);
 				shortlink.create(json,
 					id ->
 					{
