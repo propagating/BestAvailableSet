@@ -133,7 +133,7 @@ public class BestAvailableDamagePanel extends PluginPanel
 			}
 		});
 		attackType.addActionListener(e -> clearBuiltState());
-		attackTypeRow = labelled("Attack type", attackType);
+		attackTypeRow = labelled("Style", attackType);
 		controls.add(attackTypeRow);
 
 		search.setToolTipText("Type part of a monster name");
@@ -237,11 +237,6 @@ public class BestAvailableDamagePanel extends PluginPanel
 		row.add(label, BorderLayout.WEST);
 		row.add(field, BorderLayout.CENTER);
 		return row;
-	}
-
-	private static String capitalise(String s)
-	{
-		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
 	}
 
 	public void setMonsterCatalog(MonsterCatalog catalog)

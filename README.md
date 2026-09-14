@@ -12,8 +12,9 @@ real damage numbers are computed.
   per account, in `.runelite/best-available-damage/`. Open your bank once and
   the snapshot survives logging out.
 - Pick an attack type (stab, slash, crush, ranged, magic), or **Compare
-  styles** to get one card per attack type (plus the strongest melee type's
-  next card) with the right prayer on each, and search for a
+  styles** to get one card per attack type, the remaining slots filled with
+  the next cards from the strongest types, and the right prayer on each; then
+  search for a
   target. **Build loadouts** ranks the weapons you own that can use that type
   by `(strength bonus + 64) / attack speed` and gives each of the top six its
   own loadout, filling the other slots with your best item by strength then

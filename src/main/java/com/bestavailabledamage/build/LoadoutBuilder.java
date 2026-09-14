@@ -183,7 +183,10 @@ public class LoadoutBuilder
 		return out;
 	}
 
-	/** Melee types by the score of their top ranked weapon, best first, then ranged, then magic. */
+	/**
+	 * Melee types by the score of their top ranked weapon, best first (a tie keeps the
+	 * stab, slash, crush order: the sort is stable), then ranged, then magic.
+	 */
 	private List<AttackType> fillOrder(Set<Integer> ownedIds, MonsterEntry target, int magicLevel)
 	{
 		List<EquipmentEntry> owned = new ArrayList<>();
@@ -191,12 +194,14 @@ public class LoadoutBuilder
 		{
 			catalog.byId(id).ifPresent(owned::add);
 		}
-		List<AttackType> melee = new ArrayList<>(List.of(AttackType.STAB, AttackType.SLASH, AttackType.CRUSH));
-		melee.sort(Comparator.comparingDouble((AttackType type) ->
+		Map<AttackType, Double> scores = new EnumMap<>(AttackType.class);
+		for (AttackType type : List.of(AttackType.STAB, AttackType.SLASH, AttackType.CRUSH))
 		{
 			List<Loadout> plain = plainLoadouts(owned, type, target, magicLevel);
-			return plain.isEmpty() ? Double.NEGATIVE_INFINITY : ranker.score(plain.get(0).weapon(), type);
-		}).reversed());
+			scores.put(type, plain.isEmpty() ? Double.NEGATIVE_INFINITY : ranker.score(plain.get(0).weapon(), type));
+		}
+		List<AttackType> melee = new ArrayList<>(scores.keySet());
+		melee.sort(Comparator.comparingDouble((AttackType type) -> scores.get(type)).reversed());
 		List<AttackType> order = new ArrayList<>(melee);
 		order.add(AttackType.RANGED);
 		order.add(AttackType.MAGIC);
